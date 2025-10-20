@@ -1,11 +1,11 @@
 ## 1. Fundamentos de Cloud Computing
 ### 1.1 Arquitectura Cliente-Servidor
 La comunicación web se basa en tres componentes fundamentales:
-┌──────────┐         ┌─────────┐         ┌──────────┐
-│ Cliente  │ ◄─────► │   Red   │ ◄─────► │ Servidor │
+┌──────────┐         ┌──────────┐         ┌──────────┐
+│ Cliente  │ ◄─────► │   Red    │ ◄─────► │ Servidor │
 │ (Usuario)│         │(Internet)│         │(Recursos)│
-└──────────┘         └─────────┘         └──────────┘
-```
+└──────────┘         └──────────┘         └──────────┘
+
 
 - **Cliente**: Usuario que solicita información/servicios
 - **Servidor**: Máquina que almacena y proporciona contenido
@@ -13,12 +13,13 @@ La comunicación web se basa en tres componentes fundamentales:
 
 #### 📮 Analogía del Correo Postal
 
-| Concepto de Red | Equivalente Postal |
-|----------------|-------------------|
-| Enviar datos | Enviar una carta |
-| IP del cliente | Dirección del remitente |
+| Concepto de Red | Equivalente Postal         |
+|-----------------|----------------------------|
+| Enviar datos    | Enviar una carta           |
+| IP del cliente  | Dirección del remitente    |
 | IP del servidor | Dirección del destinatario |
-| Internet | Sistema postal |
+| Internet        | Sistema postal             |
+
 
 ### 1.2 Direcciones IP
 
@@ -32,12 +33,12 @@ Las direcciones IP son identificadores únicos para cada dispositivo en la red.
 
 #### Hardware Básico
 
-| Componente | Función |
-|-----------|---------|
-| **CPU** | Procesador que ejecuta instrucciones |
-| **RAM** | Almacenamiento temporal de datos en uso |
-| **Almacenamiento** | Discos duros para información permanente |
-| **Base de Datos** | Sistema para almacenar datos estructurados |
+| Componente         | Función                                     |
+|--------------------|---------------------------------------------|
+| **CPU**            | Procesador que ejecuta instrucciones        |
+| **RAM**            | Almacenamiento temporal de datos en uso     |
+| **Almacenamiento** | Discos duros para información permanente    |
+| **Base de Datos**  | Sistema para almacenar datos estructurados  |
 
 #### Componentes de Red
 ```
@@ -64,13 +65,13 @@ Servidor responde con la página web
 
 #### Cronología Clave
 
-| Año | Hito |
-|-----|------|
+| Año      | Hito                                                                                    |
+|----------|-----------------------------------------------------------------------------------------|
 | **2002** | 🔧 Lanzamiento interno - Amazon identifica su infraestructura como ventaja estratégica |
-| **2004** | 🚀 **SQS** - Primer servicio público (Simple Queue Service) |
-| **2006** | 💎 **Trinity Launch** - EC2, S3, SQS (servicios fundamentales) |
-| **2007** | 🌍 Expansión a Europa - Transición de servicio regional a global |
-| **2019** | 📊 **47% cuota de mercado** - Líder indiscutible del cloud computing |
+| **2004** | 🚀 **SQS** - Primer servicio público (Simple Queue Service)                            |
+| **2006** | 💎 **Trinity Launch** - EC2, S3, SQS (servicios fundamentales)                         |
+| **2007** | 🌍 Expansión a Europa - Transición de servicio regional a global                       |
+| **2019** | 📊 **47% cuota de mercado** - Líder indiscutible del cloud computing                   |
 
 ### 2.2 Servicios Fundacionales (2006)
 
@@ -86,12 +87,12 @@ Servidor responde con la página web
 
 #### S3 - Simple Storage Service
 ```
-┌─────────────────────────┐
-│ Almacenamiento Objetos  │
-│ • 99.999999999% (11-9s) │
+┌──────────────────────────┐
+│ Almacenamiento Objetos   │
+│ • 99.999999999% (11-9s)  │
 │ • Escalabilidad ilimitada│
-│ • Acceso API simple     │
-└─────────────────────────┘
+│ • Acceso API simple      │
+└──────────────────────────┘
 ```
 
 #### SQS - Simple Queue Service
@@ -137,12 +138,12 @@ Black Friday:
 #### Las 5 Características Fundamentales
 
 | # | Característica | Descripción |
-|---|---------------|-------------|
-| 1️⃣ | **Autoservicio bajo demanda** | Aprovisionar recursos sin intervención humana |
-| 2️⃣ | **Amplio acceso a la red** | Disponible desde cualquier dispositivo |
-| 3️⃣ | **Multi-tenancy** | Múltiples clientes comparten infraestructura segura |
-| 4️⃣ | **Elasticidad rápida** | Escalar automáticamente según demanda |
-| 5️⃣ | **Servicio medido** | Pagar solo por lo que se usa |
+|-----|-------------------------------|----------------------------------------------------|
+| 1️⃣ | **Autoservicio bajo demanda** | Aprovisionar recursos sin intervención humana       |
+| 2️⃣ | **Amplio acceso a la red**    | Disponible desde cualquier dispositivo              |
+| 3️⃣ | **Multi-tenancy**             | Múltiples clientes comparten infraestructura segura |
+| 4️⃣ | **Elasticidad rápida**        | Escalar automáticamente según demanda               |
+| 5️⃣ | **Servicio medido**           | Pagar solo por lo que se usa                        |
 
 #### Las 6 Ventajas del Cloud
 ```
@@ -189,22 +190,22 @@ Black Friday:
 
 #### Cloud Híbrido
 ```
-┌─────────────────┐
-│ On-Premises     │◄──── Conexión segura ────►┌─────────────┐
-│ (Privado)       │                            │ Cloud Público│
+┌──────────────────┐
+│ On-Premises      │◄──── Conexión segura ────►┌────────────────┐
+│ (Privado)        │                           │ Cloud Público  │
 │ • Datos sensibles│                           │ • Escalabilidad│
-└─────────────────┘                            └─────────────┘
+└──────────────────┘                           └────────────────┘
 ```
 
 ### 2.6 Casos de Uso Reales
 
-| Empresa | Uso de AWS |
-|---------|-----------|
-| **Netflix** | Streaming completo en AWS, escalabilidad masiva |
-| **Dropbox** | Almacenamiento construido sobre AWS S3 |
-| **Airbnb** | Hosting de aplicación web y móvil |
-| **NASA** | Procesamiento de datos científicos |
-| **McDonald's** | Aplicaciones retail y punto de venta |
+| Empresa        | Uso de AWS                                      |
+|----------------|-------------------------------------------------|
+| **Netflix**    | Streaming completo en AWS, escalabilidad masiva |
+| **Dropbox**    | Almacenamiento construido sobre AWS S3          |
+| **Airbnb**     | Hosting de aplicación web y móvil               |
+| **NASA**       | Procesamiento de datos científicos              |
+| **McDonald's** | Aplicaciones retail y punto de venta            |
 
 ---
 
@@ -358,15 +359,15 @@ Black Friday:
 
 #### 📋 Ejemplos de Regiones
 
-| Código | Ubicación | Nombre |
-|--------|-----------|--------|
-| `us-east-1` | Virginia del Norte | US East (N. Virginia) |
-| `us-west-2` | Oregón | US West (Oregon) |
-| `eu-west-1` | Irlanda | Europe (Ireland) |
-| `eu-central-1` | Frankfurt | Europe (Frankfurt) |
-| `ap-southeast-1` | Singapur | Asia Pacific (Singapore) |
-| `ap-northeast-1` | Tokio | Asia Pacific (Tokyo) |
-| `sa-east-1` | São Paulo | South America (São Paulo) |
+| Código           | Ubicación          | Nombre                   |
+|------------------|--------------------|--------------------------|
+| `us-east-1`      | Virginia del Norte | US East (N. Virginia)    |
+| `us-west-2`      | Oregón             | US West (Oregon)         |
+| `eu-west-1`      | Irlanda            | Europe (Ireland)         |
+| `eu-central-1`   | Frankfurt          | Europe (Frankfurt)       |
+| `ap-southeast-1` | Singapur           | Asia Pacific (Singapore) |
+| `ap-northeast-1` | Tokio              | Asia Pacific (Tokyo)     |
+| `sa-east-1`      | São Paulo          | South America (São Paulo)|
 
 #### 🎯 Criterios para Elegir una Región
 
@@ -416,7 +417,7 @@ ap-northeast-1 → $0.13/hora
 │  AZ-A          AZ-B          AZ-C       │
 │  [Centro      [Centro       [Centro     │
 │   Datos]       Datos]        Datos]     │
-│    ↓             ↓             ↓         │
+│    ↓             ↓             ↓        │
 │ Separación física para resistir         │
 │ desastres (terremotos, inundaciones)    │
 └─────────────────────────────────────────┘
@@ -429,11 +430,11 @@ ap-northeast-1 → $0.13/hora
 
 #### ✅ Ventajas
 
-| Ventaja | Beneficio |
-|---------|-----------|
-| **Alta Disponibilidad** | Si una AZ falla, las otras continúan |
-| **Redundancia** | Alimentación, red y conectividad independientes |
-| **Baja Latencia** | Interconexión de alta velocidad entre AZ |
+| Ventaja                 | Beneficio                                       |
+|-------------------------|-------------------------------------------------|
+| **Alta Disponibilidad** | Si una AZ falla, las otras continúan            |
+| **Redundancia**         | Alimentación, red y conectividad independientes |
+| **Baja Latencia**       | Interconexión de alta velocidad entre AZ        |
 
 #### 💡 Ejemplo Práctico
 ```
@@ -495,22 +496,22 @@ Resultado: Streaming sin buffering
 
 #### 🌍 Servicios GLOBALES (4 principales)
 
-| Servicio | Función | Alcance |
-|----------|---------|---------|
-| **IAM** | Identity and Access Management | Global |
-| **Route 53** | DNS Service | Global |
-| **CloudFront** | Content Delivery Network | Global |
-| **WAF** | Web Application Firewall | Global |
+| Servicio       | Función                        | Alcance |
+|----------------|--------------------------------|---------|
+| **IAM**        | Identity and Access Management | Global  |
+| **Route 53**   | DNS Service                    | Global  |
+| **CloudFront** | Content Delivery Network       | Global  |
+| **WAF**        | Web Application Firewall       | Global  |
 
 #### 📍 Servicios REGIONALES (ejemplos clave)
 
-| Servicio | Función | Alcance |
-|----------|---------|---------|
-| **EC2** | Elastic Compute Cloud | Regional |
-| **Lambda** | Serverless Computing | Regional |
-| **RDS** | Relational Database Service | Regional |
-| **S3** | Simple Storage Service | Regional* |
-| **DynamoDB** | NoSQL Database | Regional |
+| Servicio     | Función                     | Alcance   |
+|--------------|-----------------------------|-----------|
+| **EC2**      | Elastic Compute Cloud       | Regional  |
+| **Lambda**   | Serverless Computing        | Regional  |
+| **RDS**      | Relational Database Service | Regional  |
+| **S3**       | Simple Storage Service      | Regional* |
+| **DynamoDB** | NoSQL Database              | Regional  |
 
 > **Nota S3**: Aunque los buckets son regionales, los nombres de bucket son únicos globalmente.
 
@@ -524,13 +525,12 @@ Resultado: Streaming sin buffering
 │          MODELO DE RESPONSABILIDAD              │
 ├─────────────────────────────────────────────────┤
 │                                                 │
-│  AWS → Seguridad DEL Cloud                     │
-│  (Infraestructura física y servicios)          │
+│  AWS → Seguridad DEL Cloud                      │
 │                                                 │
-│  ═══════════════════════════════════════════   │
+│  ═══════════════════════════════════════════    │
 │                                                 │
-│  CLIENTE → Seguridad EN el Cloud               │
-│  (Datos, configuración y aplicaciones)         │
+│  CLIENTE → Seguridad EN el Cloud                │
+│  (Datos, configuración y aplicaciones)          │
 │                                                 │
 └─────────────────────────────────────────────────┘
 ```
@@ -551,12 +551,12 @@ Resultado: Streaming sin buffering
 └────────────────────────────────────────┘
 ```
 
-| Componente | Ejemplos Específicos |
-|-----------|---------------------|
-| **Hardware** | Servidores, almacenamiento, equipos de red |
-| **Infraestructura Global** | Regiones, AZ, Edge Locations |
-| **Software Base** | Hypervisor, sistemas de almacenamiento |
-| **Seguridad Física** | Control de acceso a centros de datos |
+| Componente                 | Ejemplos Específicos                       |
+|----------------------------|--------------------------------------------|
+| **Hardware**               | Servidores, almacenamiento, equipos de red |
+| **Infraestructura Global** | Regiones, AZ, Edge Locations               |
+| **Software Base**          | Hypervisor, sistemas de almacenamiento     |
+| **Seguridad Física**       | Control de acceso a centros de datos       |
 
 ### 5.3 Responsabilidad del Cliente (EN el Cloud)
 
@@ -576,13 +576,13 @@ Resultado: Streaming sin buffering
 └────────────────────────────────────────┘
 ```
 
-| Componente | Responsabilidad del Cliente |
-|-----------|---------------------------|
-| **Datos** | Confidencialidad, integridad, backups |
-| **IAM** | Gestión de usuarios, roles, MFA |
-| **Red y SO** | Firewall, grupos de seguridad, patches |
-| **Cifrado** | Lado cliente y configuración lado servidor |
-| **Aplicaciones** | Seguridad de código y plataforma |
+| Componente       | Responsabilidad del Cliente                |
+|------------------|--------------------------------------------|
+| **Datos**        | Confidencialidad, integridad, backups      |
+| **IAM**          | Gestión de usuarios, roles, MFA            |
+| **Red y SO**     | Firewall, grupos de seguridad, patches     |
+| **Cifrado**      | Lado cliente y configuración lado servidor |
+| **Aplicaciones** | Seguridad de código y plataforma           |
 
 ### 5.4 Controles Compartidos
 
@@ -610,22 +610,22 @@ CLIENTE:
 ├─────────────────────────────────────────────────┤
 │                                                 │
 │  IaaS (EC2):                                    │
-│  ┌───────────────┐                             │
-│  │ TÚ: Máxima    │                             │
+│  ┌───────────────┐                              │
+│  │ TÚ: Máxima    │                              │
 │  │ responsabilidad│                             │
-│  └───────────────┘                             │
+│  └───────────────┘                              │
 │                                                 │
 │  PaaS (Elastic Beanstalk):                      │
-│  ┌───────────────┐                             │
-│  │ TÚ: Media     │                             │
+│  ┌───────────────┐                              │
+│  │ TÚ: Media     │                              │
 │  │ responsabilidad│                             │
-│  └───────────────┘                             │
+│  └───────────────┘                              │
 │                                                 │
 │  SaaS (Rekognition):                            │
-│  ┌───────────────┐                             │
-│  │ TÚ: Mínima    │                             │
+│  ┌───────────────┐                              │
+│  │ TÚ: Mínima    │                              │
 │  │ responsabilidad│                             │
-│  └───────────────┘                             │
+│  └───────────────┘                              │
 │                                                 │
 └─────────────────────────────────────────────────┘
 ```
@@ -655,16 +655,16 @@ El cliente **NO puede usar AWS para**:
 ├────────────────────────────────────────┤
 │                                        │
 │  1️⃣ COMPUTACIÓN                        │
-│     • Pagar por tiempo de cómputo     │
-│     • Servicios: EC2, Lambda, ECS     │
+│     • Pagar por tiempo de cómputo      │
+│     • Servicios: EC2, Lambda, ECS      │
 │                                        │
 │  2️⃣ ALMACENAMIENTO                     │
-│     • Pagar por datos almacenados     │
-│     • Servicios: S3, EBS, Glacier     │
+│     • Pagar por datos almacenados      │
+│     • Servicios: S3, EBS, Glacier      │
 │                                        │
 │  3️⃣ TRANSFERENCIA DE DATOS             │
-│     • Entrada: GRATIS ✅              │
-│     • Salida: SE COBRA 💰             │
+│     • Entrada: GRATIS ✅               │
+│     • Salida: SE COBRA 💰              │
 │                                        │
 └────────────────────────────────────────┘
 ```
@@ -744,6 +744,8 @@ GASTO OPERATIVO (Operational Expenditure)
 
 TOTAL AÑO 1: $220,000 - $700,000
 AHORRO: 40-80%
+```
+
 ### 6.4 Ejemplo Práctico: Escalabilidad y Costos
 📊 Caso: E-commerce con Carga Variable
 ┌────────────────────────────────────────────────┐
@@ -768,7 +770,9 @@ AHORRO: 40-80%
 ├────────────────────────────────────────────────┤
 │  👥 5M usuarios                                │
 │  🖥️  500 servidores activos                    │
-│  💰 Costo: $50,000/mesRetryClaude does not have the ability to run the code it generates yet.LContinue│  💡 Solo durante el pico                       │
+│  💰 Costo: $50,000/mesRetryClaude does not have
+│ the ability to run the code it generates yet.  │  
+│  💡 Solo durante el pico                       │
 └────────────────────────────────────────────────┘
 VENTAJA CLOUD: Elasticidad Automática
 ✅ Escalar hacia arriba en minutos
