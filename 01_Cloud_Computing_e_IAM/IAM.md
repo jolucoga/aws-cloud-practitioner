@@ -1,19 +1,33 @@
+# 1. Introducción a IAM
 
-## 1. Introducción a IAM
-```
-¿Qué es IAM?
+## ¿Qué es IAM?
+
 IAM (Identity and Access Management) es un servicio global de AWS que permite controlar de forma segura el acceso a los servicios y recursos de AWS.
-Características Principales
-CaracterísticaDescripciónServicio GlobalNo está vinculado a regiones específicasGratuitoNo tiene costo adicionalControl GranularPermisos específicos a nivel de recurso y acciónSeguridadBasado en el principio de mínimo privilegio
-¿Por qué usar IAM?
+
+### Características Principales
+
+| Característica | Descripción |
+|---|---|
+| Servicio Global | No está vinculado a regiones específicas |
+| Gratuito | No tiene costo adicional |
+| Control Granular | Permisos específicos a nivel de recurso y acción |
+| Seguridad | Basado en el principio de mínimo privilegio |
+
+## ¿Por qué usar IAM?
+
 Cuando creas una cuenta de AWS, obtienes un usuario root con acceso completo. Sin embargo, usar el root para operaciones diarias es una mala práctica de seguridad.
-Ventajas de IAM:
-✅ Crear usuarios individuales para cada persona
-✅ Asignar permisos específicos según necesidades
-✅ Auditar quién hace qué en tu cuenta
-✅ Aplicar políticas de seguridad robustas
-Componentes Fundamentales de IAM
-mermaidgraph TD
+
+### Ventajas de IAM
+
+- ✅ Crear usuarios individuales para cada persona
+- ✅ Asignar permisos específicos según necesidades
+- ✅ Auditar quién hace qué en tu cuenta
+- ✅ Aplicar políticas de seguridad robustas
+
+### Componentes Fundamentales de IAM
+
+```mermaid
+graph TD
     A[IAM] --> B[Usuarios]
     A --> C[Grupos]
     A --> D[Políticas]
@@ -26,36 +40,37 @@ mermaidgraph TD
 
 ---
 
-## 2. Usuarios y Grupos de IAM
+# 2. Usuarios y Grupos de IAM
 
-### 2.1 Usuarios de IAM
+## 2.1 Usuarios de IAM
 
 Un usuario de IAM representa una identidad con credenciales permanentes para interactuar con AWS.
 
-#### Características de los Usuarios
+### Características de los Usuarios
 
 - **Credenciales únicas**: Nombre de usuario y contraseña
 - **Claves de acceso**: Para acceso programático
 - **Permisos asignados**: Mediante políticas
 - **Representan**: Personas reales o aplicaciones
 
-#### Tipos de Acceso
+### Tipos de Acceso
 
-1. **Acceso a la Consola**
-   - Usuario y contraseña
-   - Interfaz web de AWS
-   - Requiere MFA (recomendado)
+#### 1. Acceso a la Consola
+- Usuario y contraseña
+- Interfaz web de AWS
+- Requiere MFA (recomendado)
 
-2. **Acceso Programático**
-   - Access Key ID
-   - Secret Access Key
-   - Para CLI, SDK, APIs
+#### 2. Acceso Programático
+- Access Key ID
+- Secret Access Key
+- Para CLI, SDK, APIs
 
-### 2.2 Grupos de IAM
+## 2.2 Grupos de IAM
 
 Los grupos son colecciones de usuarios que comparten los mismos permisos.
 
-#### Ejemplo de Estructura Organizacional
+### Ejemplo de Estructura Organizacional
+
 ```
 Organización AWS
 │
@@ -71,20 +86,31 @@ Organización AWS
 └── Grupo: Equipo de Auditoría
     ├── Charles (también en Desarrolladores)
     └── David (también en Operaciones)
-Reglas Importantes de Grupos
-✅ Permitido❌ No PermitidoUsuario en múltiples gruposGrupos dentro de otros gruposUsuario sin grupo (no recomendado)Usar grupos como identidades en políticasAsignar políticas a gruposGrupos con permisos de root
 ```
 
-### 2.3 Práctica: Crear Usuarios y Grupos
-#### Paso 1: Crear un Grupo
-bash# Acceso a la Consola de AWS
+### Reglas Importantes de Grupos
+
+| ✅ Permitido | ❌ No Permitido |
+|---|---|
+| Usuario en múltiples grupos | Grupos dentro de otros grupos |
+| Usuario sin grupo (no recomendado) | Usar grupos como identidades en políticas |
+| Asignar políticas a grupos | Grupos con permisos de root |
+
+## 2.3 Práctica: Crear Usuarios y Grupos
+
+### Paso 1: Crear un Grupo
+
+```
 1. Navega a: IAM > User groups
 2. Click: "Create group"
 3. Nombre: "Developers"
 4. Adjuntar políticas (opcional en creación)
 5. Click: "Create group"
-#### Paso 2: Crear un Usuario
-bash# En la Consola de IAM
+```
+
+### Paso 2: Crear un Usuario
+
+```
 1. Navega a: IAM > Users
 2. Click: "Create user"
 3. Configuración:
@@ -93,40 +119,62 @@ bash# En la Consola de IAM
    - Console password: Auto-generated o Custom
    - ☑ Users must create a new password at next sign-in (recomendado)
 4. Click: "Next"
-#### Paso 3: Asignar Permisos
-Opción A: Agregar a un Grupo
-bash1. Seleccionar: "Add user to group"
+```
+
+### Paso 3: Asignar Permisos
+
+**Opción A: Agregar a un Grupo**
+
+```
+1. Seleccionar: "Add user to group"
 2. Marcar: "Developers"
 3. Click: "Next"
-Opción B: Políticas Directas (no recomendado)
-bash1. Seleccionar: "Attach policies directly"
+```
+
+**Opción B: Políticas Directas (no recomendado)**
+
+```
+1. Seleccionar: "Attach policies directly"
 2. Buscar y seleccionar políticas
 3. Click: "Next"
-Opción C: Copiar Permisos
-bash1. Seleccionar: "Copy permissions from existing user"
+```
+
+**Opción C: Copiar Permisos**
+
+```
+1. Seleccionar: "Copy permissions from existing user"
 2. Elegir usuario de referencia
 3. Click: "Next"
-#### Paso 4: Revisar y Crear
-bash1. Revisar configuración
+```
+
+### Paso 4: Revisar y Crear
+
+```
+1. Revisar configuración
 2. Tags (opcional pero recomendado):
    - Key: "Department" | Value: "Engineering"
    - Key: "Environment" | Value: "Production"
 3. Click: "Create user"
 4. ⚠️ IMPORTANTE: Descargar credenciales (única oportunidad)
+```
 
+## 2.4 Acceso como Usuario IAM
 
-### 2.4 Acceso como Usuario IAM
+### URL de Inicio de Sesión
 
-#### URL de Inicio de Sesión
 ```
 https://[ACCOUNT-ID].signin.aws.amazon.com/console
 ```
 
 O usando el alias de cuenta:
+
 ```
 https://[ACCOUNT-ALIAS].signin.aws.amazon.com/console
-Crear Alias de Cuenta
-bash# En IAM Dashboard
+```
+
+### Crear Alias de Cuenta
+
+```
 1. Navega a: IAM > Dashboard
 2. Sección: "AWS Account"
 3. Click: "Create" junto a "Account Alias"
@@ -134,7 +182,8 @@ bash# En IAM Dashboard
 5. Click: "Create alias"
 ```
 
-#### Primer Inicio de Sesión
+### Primer Inicio de Sesión
+
 ```
 Usuario: john-developer
 Contraseña: [contraseña temporal]
@@ -143,11 +192,18 @@ Contraseña: [contraseña temporal]
 → Acceso concedido
 ```
 
-## 3. Políticas IAM
-### 3.1 ¿Qué son las Políticas IAM?
+---
+
+# 3. Políticas IAM
+
+## 3.1 ¿Qué son las Políticas IAM?
+
 Las políticas son documentos JSON que definen permisos. Se aplican a usuarios, grupos o roles para controlar qué acciones pueden realizar en qué recursos.
-### 3.2 Estructura de una Política IAM
-json{
+
+## 3.2 Estructura de una Política IAM
+
+```json
+{
   "Version": "2012-10-17",
   "Id": "S3-Account-Permissions",
   "Statement": [
@@ -170,20 +226,44 @@ json{
     }
   ]
 }
-### 3.3 Componentes de una Política
-ElementoDescripciónObligatorioVersionVersión del lenguaje (siempre "2012-10-17")SíIdIdentificador de la políticaNoStatementArray de declaracionesSíSidID de la declaraciónNoEffect"Allow" o "Deny"SíPrincipalCuenta/usuario/rol al que aplicaDepende*ActionAcciones permitidas/denegadasSíResourceRecursos afectadosSíConditionCondiciones opcionalesNo
+```
+
+## 3.3 Componentes de una Política
+
+| Elemento | Descripción | Obligatorio |
+|---|---|---|
+| Version | Versión del lenguaje (siempre "2012-10-17") | Sí |
+| Id | Identificador de la política | No |
+| Statement | Array de declaraciones | Sí |
+| Sid | ID de la declaración | No |
+| Effect | "Allow" o "Deny" | Sí |
+| Principal | Cuenta/usuario/rol al que aplica | Depende* |
+| Action | Acciones permitidas/denegadas | Sí |
+| Resource | Recursos afectados | Sí |
+| Condition | Condiciones opcionales | No |
+
 *Requerido en políticas basadas en recursos
-### 3.4 Tipos de Políticas
-1. Políticas Gestionadas por AWS
+
+## 3.4 Tipos de Políticas
+
+### 1. Políticas Gestionadas por AWS
+
 Creadas y mantenidas por AWS:
-json{
+
+```json
+{
   "PolicyName": "AmazonS3ReadOnlyAccess",
   "Description": "Provides read-only access to Amazon S3",
   "ManagedBy": "AWS"
 }
-2. Políticas Gestionadas por el Cliente
+```
+
+### 2. Políticas Gestionadas por el Cliente
+
 Creadas por ti, reutilizables:
-json{
+
+```json
+{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -199,13 +279,19 @@ json{
     }
   ]
 }
-3. Políticas Inline
+```
+
+### 3. Políticas Inline
+
 Integradas directamente en un usuario/grupo/rol específico (no recomendado):
-bash# Las políticas inline NO son reutilizables
-    # Se eliminan cuando se elimina el usuario/grupo/rol
 
+```
+Las políticas inline NO son reutilizables.
+Se eliminan cuando se elimina el usuario/grupo/rol.
+```
 
-### 3.5 Herencia de Políticas
+## 3.5 Herencia de Políticas
+
 ```
 Grupo: Developers
 └── Política: DeveloperAccess
@@ -215,16 +301,15 @@ Grupo: Developers
         └── Política Inline: ExtraPermissions
             └── Resultado: DeveloperAccess + ExtraPermissions
 ```
-### 3.6 Práctica: Crear y Aplicar Políticas
-Crear Política Personalizada
-bash# En la Consola de AWS
-1. Navega a: IAM > Policies
-2. Click: "Create policy"
-3. Dos opciones:
-   a) Visual Editor (GUI)
-   b) JSON (código directo)
-Opción A: Visual Editor
-bash1. Service: "S3"
+
+## 3.6 Práctica: Crear y Aplicar Políticas
+
+### Crear Política Personalizada
+
+#### Opción A: Visual Editor
+
+```
+1. Service: "S3"
 2. Actions:
    - Access level: Read
    - ☑ GetObject
@@ -238,8 +323,12 @@ bash1. Service: "S3"
 6. Name: "MyAppS3ReadOnly"
 7. Description: "Read-only access to my-app-bucket"
 8. Click: "Create policy"
-Opción B: JSON Editor
-json{
+```
+
+#### Opción B: JSON Editor
+
+```json
+{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -256,25 +345,38 @@ json{
     }
   ]
 }
-Adjuntar Política a un Grupo
-bash1. Navega a: IAM > User groups
-    2. Selecciona: "Developers"
-    3. Tab: "Permissions"
-    4. Click: "Add permissions" > "Attach policies"
-    5. Buscar: "MyAppS3ReadOnly"
-    6. ☑ Marcar la política
-    7. Click: "Add permissions"
-Adjuntar Política a un Usuario
-bash1. Navega a: IAM > Users
-    2. Selecciona: "john-developer"
-    3. Tab: "Permissions"
-    4. Click: "Add permissions" > "Attach policies directly"
-    5. Buscar y seleccionar política
-    6. Click: "Add permissions"
-### 3.7 Ejemplo Práctico: Usuario en Múltiples Grupos
-Escenario
+```
+
+### Adjuntar Política a un Grupo
+
+```
+1. Navega a: IAM > User groups
+2. Selecciona: "Developers"
+3. Tab: "Permissions"
+4. Click: "Add permissions" > "Attach policies"
+5. Buscar: "MyAppS3ReadOnly"
+6. ☑ Marcar la política
+7. Click: "Add permissions"
+```
+
+### Adjuntar Política a un Usuario
+
+```
+1. Navega a: IAM > Users
+2. Selecciona: "john-developer"
+3. Tab: "Permissions"
+4. Click: "Add permissions" > "Attach policies directly"
+5. Buscar y seleccionar política
+6. Click: "Add permissions"
+```
+
+## 3.7 Ejemplo Práctico: Usuario en Múltiples Grupos
+
+### Escenario
+
 Charles necesita acceso como desarrollador Y como auditor.
-bash# Estructura:
+
+```
 Charles
 ├── Grupo: Developers
 │   └── Política: DevelopmentAccess
@@ -287,10 +389,13 @@ Charles
         ├── CloudWatch Logs (read-only)
         └── IAM (read-only)
 
-    # Permisos Finales de Charles:
-    # = DevelopmentAccess + AuditAccess
-Implementación
-bash
+# Permisos Finales de Charles:
+# = DevelopmentAccess + AuditAccess
+```
+
+### Implementación
+
+```
 # Paso 1: Crear grupos con sus políticas
 1. Crear "Developers" con "DevelopmentAccess"
 2. Crear "Auditors" con "AuditAccess"
@@ -302,9 +407,14 @@ bash
 4. ☑ Developers
 5. ☑ Auditors
 6. Click: "Add permissions"
-### 3.8 Política de Denegación Explícita
+```
+
+## 3.8 Política de Denegación Explícita
+
 La denegación SIEMPRE tiene prioridad:
-json{
+
+```json
+{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -319,11 +429,16 @@ json{
     }
   ]
 }
-Resultado: Puede hacer TODO en S3 EXCEPTO eliminar buckets.
-### 3.9 Ejemplos de Políticas Comunes
 ```
-Acceso Completo a EC2
-json{
+
+**Resultado**: Puede hacer TODO en S3 EXCEPTO eliminar buckets.
+
+## 3.9 Ejemplos de Políticas Comunes
+
+### Acceso Completo a EC2
+
+```json
+{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -333,8 +448,12 @@ json{
     }
   ]
 }
-Solo Lectura en RDS
-json{
+```
+
+### Solo Lectura en RDS
+
+```json
+{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -347,8 +466,12 @@ json{
     }
   ]
 }
-Gestión de IAM Limitada
-json{
+```
+
+### Gestión de IAM Limitada
+
+```json
+{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -367,24 +490,26 @@ json{
 
 ---
 
-## 4. Autenticación Multifactor (MFA)
+# 4. Autenticación Multifactor (MFA)
 
-### 4.1 ¿Qué es MFA?
+## 4.1 ¿Qué es MFA?
 
 MFA (Multi-Factor Authentication) añade una capa extra de seguridad requiriendo:
+
 ```
 Autenticación = Algo que SABES + Algo que POSEES
 
-┌─────────────────┐     ┌──────────────────┐
-│   Contraseña    │  +  │  Código MFA      │
-│  (algo que      │     │  (algo que       │
-│   sabes)        │     │   posees)        │
-└─────────────────┘     └──────────────────┘
+┌─────────────────────┐     ┌──────────────────────┐
+│   Contraseña        │  +  │  Código MFA          │
+│  (algo que          │     │  (algo que           │
+│   sabes)            │     │   posees)            │
+└─────────────────────┘     └──────────────────────┘
 ```
 
-### 4.2 ¿Por qué usar MFA?
+## 4.2 ¿Por qué usar MFA?
 
-#### Escenario Sin MFA
+### Escenario Sin MFA
+
 ```
 Hacker roba contraseña
 → Acceso COMPLETO a la cuenta
@@ -393,7 +518,8 @@ Hacker roba contraseña
 → DESASTRE 💥
 ```
 
-#### Escenario Con MFA
+### Escenario Con MFA
+
 ```
 Hacker roba contraseña
 → Intenta acceder
@@ -401,11 +527,22 @@ Hacker roba contraseña
 → Hacker NO tiene el dispositivo
 → Acceso DENEGADO ✅
 → Cuenta PROTEGIDA 🛡️
-4.3 Opciones de Dispositivos MFA en AWS
-TipoOpcionesCaracterísticasVirtual MFA• Google Authenticator<br>• Authy<br>• Microsoft Authenticator• Aplicación en smartphone<br>• Gratuito<br>• Fácil configuraciónU2F Security Key• YubiKey<br>• Titan Security Key• Dispositivo físico USB<br>• Múltiples usuarios/cuentas<br>• Muy seguroHardware MFA• Gemalto<br>• SurePassID• Dispositivo físico dedicado<br>• Para GovCloud<br>• Muy seguro
-4.4 Práctica: Configurar MFA
-Para Usuario Root
-bash# ⚠️ CRÍTICO: Siempre activa MFA en la cuenta root
+```
+
+## 4.3 Opciones de Dispositivos MFA en AWS
+
+| Tipo | Opciones | Características |
+|---|---|---|
+| Virtual MFA | • Google Authenticator<br>• Authy<br>• Microsoft Authenticator | • Aplicación en smartphone<br>• Gratuito<br>• Fácil configuración |
+| U2F Security Key | • YubiKey<br>• Titan Security Key | • Dispositivo físico USB<br>• Múltiples usuarios/cuentas<br>• Muy seguro |
+| Hardware MFA | • Gemalto<br>• SurePassID | • Dispositivo físico dedicado<br>• Para GovCloud<br>• Muy seguro |
+
+## 4.4 Práctica: Configurar MFA
+
+### Para Usuario Root
+
+```
+⚠️ CRÍTICO: Siempre activa MFA en la cuenta root
 
 1. Iniciar sesión como root
 2. Navega a: Nombre de cuenta (arriba derecha) > Security credentials
@@ -417,8 +554,12 @@ bash# ⚠️ CRÍTICO: Siempre activa MFA en la cuenta root
    - ○ Security key
    - ○ Hardware TOTP token
 7. Click: "Next"
-Configuración con Authenticator App
-bash# Paso 1: Escanear QR
+```
+
+### Configuración con Authenticator App
+
+```
+# Paso 1: Escanear QR
 1. Abrir Google Authenticator o Authy en smartphone
 2. Click: "+" o "Add account"
 3. Escanear código QR mostrado en pantalla AWS
@@ -431,16 +572,24 @@ bash# Paso 1: Escanear QR
 5. Click: "Add MFA"
 
 # ✅ MFA activado correctamente
-Para Usuarios IAM
-bash# Los usuarios IAM pueden configurar su propio MFA
+```
+
+### Para Usuarios IAM
+
+```
+Los usuarios IAM pueden configurar su propio MFA
 
 1. Iniciar sesión como usuario IAM
 2. Navega a: Nombre de usuario > Security credentials
 3. Sección: "Multi-factor authentication (MFA)"
 4. Click: "Assign MFA device"
 5. Seguir mismos pasos que root
-Configuración con Security Key (YubiKey)
-bash1. Seleccionar: "Security key"
+```
+
+### Configuración con Security Key (YubiKey)
+
+```
+1. Seleccionar: "Security key"
 2. Click: "Next"
 3. Insertar YubiKey en puerto USB
 4. Tocar sensor de YubiKey cuando parpadee
@@ -449,37 +598,42 @@ bash1. Seleccionar: "Security key"
 # ✅ Security key registrada
 ```
 
-### 4.5 Inicio de Sesión con MFA
+## 4.5 Inicio de Sesión con MFA
 
-#### Proceso de Login
+### Proceso de Login
+
 ```
-┌─────────────────────────────────────────────┐
-│ 1. Ingresar nombre de usuario y contraseña │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│ 2. AWS solicita código MFA                 │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│ 3. Abrir app autenticador                  │
-│    Obtener código de 6 dígitos             │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│ 4. Ingresar código MFA                     │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│ 5. ✅ Acceso concedido                      │
-└─────────────────────────────────────────────┘
-4.6 Política de Contraseñas
+┌──────────────────────────────────────────┐
+│ 1. Ingresar nombre de usuario y contraseña│
+└──────────────────────┬───────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────┐
+│ 2. AWS solicita código MFA               │
+└──────────────────────┬───────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────┐
+│ 3. Abrir app autenticador                │
+│    Obtener código de 6 dígitos            │
+└──────────────────────┬───────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────┐
+│ 4. Ingresar código MFA                   │
+└──────────────────────┬───────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────┐
+│ 5. ✅ Acceso concedido                   │
+└──────────────────────────────────────────┘
+```
+
+## 4.6 Política de Contraseñas
+
 Además de MFA, configura una política de contraseñas fuerte:
-bash# En IAM Dashboard
+
+```
 1. Navega a: IAM > Account settings
 2. Sección: "Password policy"
 3. Click: "Edit"
@@ -496,9 +650,14 @@ bash# En IAM Dashboard
 ☑ Prevent password reuse: 5 passwords remembered
 
 4. Click: "Save changes"
-4.7 Recuperación de Acceso sin MFA
+```
+
+## 4.7 Recuperación de Acceso sin MFA
+
 Si pierdes el dispositivo MFA:
-bash# Para Cuenta Root:
+
+```
+# Para Cuenta Root:
 1. Proceso de recuperación alternativo
 2. Contactar AWS Support
 3. Verificación de identidad exhaustiva
@@ -511,40 +670,42 @@ bash# Para Cuenta Root:
 
 ---
 
-## 5. Acceso Programático: CLI y SDK
+# 5. Acceso Programático: CLI y SDK
 
-### 5.1 Métodos de Acceso a AWS
+## 5.1 Métodos de Acceso a AWS
 
 AWS proporciona tres formas de interactuar con sus servicios:
 
 | Método | Descripción | Protección |
-|--------|-------------|------------|
+|---|---|---|
 | **Consola AWS** | Interfaz web gráfica | Contraseña + MFA |
 | **AWS CLI** | Línea de comandos | Claves de acceso |
 | **AWS SDK** | Librerías para código | Claves de acceso |
 
-### 5.2 Claves de Acceso AWS
+## 5.2 Claves de Acceso AWS
 
-#### Componentes
+### Componentes
+
 ```
 Access Key = Access Key ID + Secret Access Key
 
 ┌────────────────────────────────────────────┐
 │ Access Key ID (público)                    │
-│ AKIAIOSFODNN7EXAMPLE                      │
+│ AKIAIOSFODNN7EXAMPLE                       │
 │                                            │
-│ ≈ Nombre de usuario                       │
+│ ≈ Nombre de usuario                        │
 └────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────┐
-│ Secret Access Key (SECRETO)               │
-│ wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY │
+│ Secret Access Key (SECRETO)                │
+│ wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY   │
 │                                            │
-│ ≈ Contraseña                              │
+│ ≈ Contraseña                               │
 └────────────────────────────────────────────┘
 ```
 
-#### ⚠️ Reglas de Seguridad
+### ⚠️ Reglas de Seguridad
+
 ```
 ❌ NUNCA compartir claves de acceso
 ❌ NUNCA incluir en código
@@ -556,16 +717,24 @@ Access Key = Access Key ID + Secret Access Key
 ✅ Principio de mínimo privilegio
 ✅ Eliminar claves no usadas
 ```
-### 5.3 AWS CLI (Command Line Interface)
-¿Qué es AWS CLI?
+
+## 5.3 AWS CLI (Command Line Interface)
+
+### ¿Qué es AWS CLI?
+
 Herramienta que permite interactuar con AWS mediante comandos en terminal.
-bash# Ejemplo de comando
+
+### Ejemplo de comando
+
+```bash
 aws s3 ls
 # Lista todos los buckets S3
 
 aws ec2 describe-instances
 # Lista instancias EC2
-Características
+```
+
+### Características
 
 ✅ Acceso directo a APIs de AWS
 ✅ Scripting y automatización
@@ -573,9 +742,12 @@ Características
 ✅ Multiplataforma (Windows, macOS, Linux)
 ✅ Alternativa a la consola web
 
-### 5.4 Instalación de AWS CLI
-Windows
-powershell# Método 1: MSI Installer
+## 5.4 Instalación de AWS CLI
+
+### Windows
+
+```powershell
+# Método 1: MSI Installer
 # Descargar de: https://aws.amazon.com/cli/
 
 # Método 2: winget
@@ -584,8 +756,12 @@ winget install -e --id Amazon.AWSCLI
 # Verificar instalación
 aws --version
 # Salida esperada: aws-cli/2.x.x Python/3.x.x Windows/10
-macOS
-bash# Método 1: Instalador PKG
+```
+
+### macOS
+
+```bash
+# Método 1: Instalador PKG
 # Descargar de: https://aws.amazon.com/cli/
 
 # Método 2: Homebrew
@@ -597,8 +773,12 @@ pip3 install awscli
 # Verificar instalación
 aws --version
 # Salida esperada: aws-cli/2.x.x Python/3.x.x Darwin/xx.x.x
-Linux
-bash# Ubuntu/Debian
+```
+
+### Linux
+
+```bash
+# Ubuntu/Debian
 sudo apt update
 sudo apt install awscli
 
@@ -612,9 +792,13 @@ sudo ./aws/install
 
 # Verificar instalación
 aws --version
-5.5 Configuración de AWS CLI
-Crear Claves de Acceso
-bash# En la Consola AWS
+```
+
+## 5.5 Configuración de AWS CLI
+
+### Crear Claves de Acceso
+
+```
 1. Navega a: IAM > Users > [tu-usuario]
 2. Tab: "Security credentials"
 3. Sección: "Access keys"
@@ -629,8 +813,12 @@ bash# En la Consola AWS
 # - Descargar archivo .csv o copiar claves
 # - Esta es la ÚNICA vez que verás la Secret Access Key
 # - Guardar en un lugar seguro
-Configuración Inicial
-bash# Ejecutar comando de configuración
+```
+
+### Configuración Inicial
+
+```bash
+# Ejecutar comando de configuración
 aws configure
 
 # Ingresar información:
@@ -642,8 +830,12 @@ Default output format [None]: json
 # ✅ Configuración guardada en:
 # - ~/.aws/credentials (claves)
 # - ~/.aws/config (configuración)
-Archivo de Credenciales
-ini# ~/.aws/credentials
+```
+
+### Archivo de Credenciales
+
+```ini
+# ~/.aws/credentials
 [default]
 aws_access_key_id = AKIAIOSFODNN7EXAMPLE
 aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -651,8 +843,12 @@ aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 [usuario-produccion]
 aws_access_key_id = AKIAI44QH8DHBEXAMPLE
 aws_secret_access_key = je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY
-Archivo de Configuración
-ini# ~/.aws/config
+```
+
+### Archivo de Configuración
+
+```ini
+# ~/.aws/config
 [default]
 region = us-east-1
 output = json
@@ -660,9 +856,14 @@ output = json
 [profile usuario-produccion]
 region = eu-west-1
 output = table
-5.6 Práctica con AWS CLI
-Comandos Básicos
-bash# Ver identidad actual
+```
+
+## 5.6 Práctica con AWS CLI
+
+### Comandos Básicos
+
+```bash
+# Ver identidad actual
 aws sts get-caller-identity
 # Output:
 {
@@ -688,8 +889,12 @@ aws s3 cp archivo.txt s3://mi-nuevo-bucket-12345/
 
 # Descargar archivo de S3
 aws s3 cp s3://mi-nuevo-bucket-12345/archivo.txt ./
-Usar Perfiles
-bash# Listar con perfil específico
+```
+
+### Usar Perfiles
+
+```bash
+# Listar con perfil específico
 aws s3 ls --profile usuario-produccion
 
 # Configurar perfil adicional
@@ -701,40 +906,63 @@ Default output format [None]: json
 
 # Usar perfil en comando
 aws ec2 describe-instances --profile desarrollo
-5.7 AWS SDK (Software Development Kit)
-¿Qué es AWS SDK?
-Conjunto de bibliotecas para programar con AWS en diferentes lenguajes.
-Lenguajes Soportados
-LenguajeSDKUso ComúnJavaScriptAWS SDK for JavaScriptNode.js, navegadorPythonBoto3Scripts, Machine LearningJavaAWS SDK for JavaAplicaciones enterprisePHPAWS SDK for PHPAplicaciones web.NETAWS SDK for .NETAplicaciones WindowsRubyAWS SDK for RubyRuby on RailsGoAWS SDK for GoMicroserviciosC++AWS SDK for C++Aplicaciones de alto rendimiento
-Ejemplo: Python (Boto3)
-bash# Instalación
-pip install boto3
+```
 
-# Script básico
-python# ejemplo.py
+## 5.7 AWS SDK (Software Development Kit)
+
+### ¿Qué es AWS SDK?
+
+Conjunto de bibliotecas para programar con AWS en diferentes lenguajes.
+
+### Lenguajes Soportados
+
+| Lenguaje | SDK | Uso Común |
+|---|---|---|
+| JavaScript | AWS SDK for JavaScript | Node.js, navegador |
+| Python | Boto3 | Scripts, Machine Learning |
+| Java | AWS SDK for Java | Aplicaciones enterprise |
+| PHP | AWS SDK for PHP | Aplicaciones web |
+| .NET | AWS SDK for .NET | Aplicaciones Windows |
+| Ruby | AWS SDK for Ruby | Ruby on Rails |
+| Go | AWS SDK for Go | Microservicios |
+| C++ | AWS SDK for C++ | Aplicaciones de alto rendimiento |
+
+### Ejemplo: Python (Boto3)
+
+```bash
+# Instalación
+pip install boto3
+```
+
+```python
+# ejemplo.py
 import boto3
 
 # Crear cliente S3
 s3 = boto3.client('s3')
 
-# LiRetryClaude does not have the ability to run the code it generates yet.LContinuestar buckets
+# Listar buckets
 response = s3.list_buckets()
-Mostrar nombres de buckets
 print('Buckets existentes:')
 for bucket in response['Buckets']:
-print(f'  - {bucket["Name"]}')
-Subir archivo
+    print(f'  - {bucket["Name"]}')
+
+# Subir archivo
 s3.upload_file('archivo.txt', 'mi-bucket', 'archivo.txt')
 print('Archivo subido correctamente')
-Descargar archivo
+
+# Descargar archivo
 s3.download_file('mi-bucket', 'archivo.txt', 'descargado.txt')
 print('Archivo descargado correctamente')
+```
 
-#### Ejemplo: Node.js
+### Ejemplo: Node.js
+
 ```bash
 # Instalación
 npm install @aws-sdk/client-s3
 ```
+
 ```javascript
 // ejemplo.js
 const { S3Client, ListBucketsCommand, PutObjectCommand } = require("@aws-sdk/client-s3");
@@ -775,7 +1003,8 @@ listBuckets();
 uploadFile();
 ```
 
-#### Ejemplo: Java
+### Ejemplo: Java
+
 ```java
 // S3Example.java
 import software.amazon.awssdk.services.s3.S3Client;
@@ -806,13 +1035,14 @@ public class S3Example {
 
 ---
 
-## 6. AWS CloudShell
+# 6. AWS CloudShell
 
-### 6.1 ¿Qué es AWS CloudShell?
+## 6.1 ¿Qué es AWS CloudShell?
 
 **AWS CloudShell** es una terminal basada en navegador, preautenticada con tus credenciales de la consola.
 
-#### Características Principales
+### Características Principales
+
 ```
 ✅ Preinstalado: AWS CLI, Python, Node.js, Git
 ✅ Preautenticado: No necesita configurar credenciales
@@ -821,23 +1051,24 @@ public class S3Example {
 ✅ Disponible en múltiples regiones
 ```
 
-### 6.2 Disponibilidad Regional
+## 6.2 Disponibilidad Regional
 
 CloudShell NO está disponible en todas las regiones:
 
 | ✅ Disponible | ❌ No Disponible |
-|---------------|------------------|
+|---|---|
 | us-east-1 (N. Virginia) | Regiones GovCloud |
 | us-west-2 (Oregon) | China |
 | eu-west-1 (Ireland) | Regiones más nuevas |
 | ap-northeast-1 (Tokyo) | |
 | [Verificar lista actualizada](https://docs.aws.amazon.com/cloudshell/latest/userguide/supported-aws-regions.html) | |
 
-### 6.3 Práctica: Usar CloudShell
+## 6.3 Práctica: Usar CloudShell
 
-#### Acceso a CloudShell
-```bash
-# En la Consola de AWS
+### Acceso a CloudShell
+
+```
+En la Consola de AWS:
 1. Click en el ícono de CloudShell (parte superior derecha)
    [>_] CloudShell
 2. Se abre una terminal en el navegador
@@ -846,7 +1077,8 @@ CloudShell NO está disponible en todas las regiones:
 # ✅ Terminal lista para usar
 ```
 
-#### Comandos Básicos
+### Comandos Básicos
+
 ```bash
 # Verificar identidad
 [cloudshell-user@ip-10-0-123-45 ~]$ aws sts get-caller-identity
@@ -874,7 +1106,8 @@ Python 3.x.x
 v18.x.x
 ```
 
-#### Crear y Gestionar Archivos
+### Crear y Gestionar Archivos
+
 ```bash
 # Crear archivo
 [cloudshell-user@ip-10-0-123-45 ~]$ echo "Hola desde CloudShell" > test.txt
@@ -895,7 +1128,8 @@ drwxr-xr-x 3 root            root            4096 Jan 20 09:55 ..
 -rw-r--r-- 1 cloudshell-user cloudshell-user   23 Jan 20 10:00 test.txt
 ```
 
-#### Instalar Herramientas Adicionales
+### Instalar Herramientas Adicionales
+
 ```bash
 # Instalar paquetes Python
 [cloudshell-user@ip-10-0-123-45 ~]$ pip3 install boto3 pandas
@@ -907,10 +1141,11 @@ drwxr-xr-x 3 root            root            4096 Jan 20 09:55 ..
 [cloudshell-user@ip-10-0-123-45 ~]$ git clone https://github.com/usuario/repo.git
 ```
 
-### 6.4 Subir/Descargar Archivos
+## 6.4 Subir/Descargar Archivos
 
-#### Desde la Interfaz
-```bash
+### Desde la Interfaz
+
+```
 # Subir archivo
 1. Click: "Actions" > "Upload file"
 2. Seleccionar archivo local
@@ -922,7 +1157,8 @@ drwxr-xr-x 3 root            root            4096 Jan 20 09:55 ..
 3. Archivo se descarga al navegador
 ```
 
-#### Usando AWS CLI
+### Usando AWS CLI
+
 ```bash
 # Subir desde local a S3 (vía CloudShell)
 [cloudshell-user@ip-10-0-123-45 ~]$ aws s3 cp s3://mi-bucket/archivo.txt ./
@@ -932,7 +1168,8 @@ drwxr-xr-x 3 root            root            4096 Jan 20 09:55 ..
 [cloudshell-user@ip-10-0-123-45 ~]$ aws s3 cp modificado.txt s3://mi-bucket/
 ```
 
-### 6.5 Script de Python en CloudShell
+## 6.5 Script de Python en CloudShell
+
 ```python
 # Crear script
 [cloudshell-user@ip-10-0-123-45 ~]$ cat > listar_ec2.py << 'EOF'
@@ -966,14 +1203,15 @@ EOF
 [cloudshell-user@ip-10-0-123-45 ~]$ python3 listar_ec2.py
 ```
 
-### 6.6 Persistencia de Datos
+## 6.6 Persistencia de Datos
+
 ```bash
 # El directorio /home persiste entre sesiones
-/home/cloudshell-user/  ← PERSISTENTE (1 GB)
+/home/cloudshell-user/  → PERSISTENTE (1 GB)
 
 # Otros directorios NO persisten
-/tmp/                   ← SE BORRA al cerrar sesión
-/var/                   ← SE BORRA al cerrar sesión
+/tmp/                   → SE BORRA al cerrar sesión
+/var/                   → SE BORRA al cerrar sesión
 
 # ⚠️ IMPORTANTE: Guardar archivos importantes en:
 # - /home/cloudshell-user/
@@ -981,10 +1219,10 @@ EOF
 # - Repositorio Git
 ```
 
-### 6.7 CloudShell vs CLI Local
+## 6.7 CloudShell vs CLI Local
 
 | Aspecto | CloudShell | CLI Local |
-|---------|------------|-----------|
+|---|---|---|
 | **Configuración** | Ninguna | Instalar + configurar |
 | **Credenciales** | Automáticas | Manual (access keys) |
 | **Persistencia** | 1 GB limitado | Ilimitado (disco local) |
@@ -994,11 +1232,12 @@ EOF
 
 ---
 
-## 7. Roles de IAM
+# 7. Roles de IAM
 
-### 7.1 ¿Qué son los Roles de IAM?
+## 7.1 ¿Qué son los Roles de IAM?
 
 Los **roles de IAM** son identidades de AWS con permisos específicos que pueden ser **asumidos** por servicios o usuarios cuando los necesitan.
+
 ```
 Roles ≠ Usuarios
 
@@ -1006,9 +1245,10 @@ Usuario: Identidad PERMANENTE para personas
 Rol: Identidad TEMPORAL para servicios/aplicaciones
 ```
 
-### 7.2 ¿Cuándo Usar Roles?
+## 7.2 ¿Cuándo Usar Roles?
 
-#### Casos de Uso Principales
+### Casos de Uso Principales
+
 ```mermaid
 graph TD
     A[Roles IAM] --> B[Instancias EC2]
@@ -1029,32 +1269,34 @@ graph TD
 3. **Federación de identidades**
    - Usuarios de Google/Facebook acceden a recursos AWS
 
-### 7.3 Anatomía de un Rol
+## 7.3 Anatomía de un Rol
+
 ```
 Rol de IAM = Políticas de Confianza + Políticas de Permisos
 
-┌─────────────────────────────────────────┐
+┌────────────────────────────────────────┐
 │ POLÍTICA DE CONFIANZA                   │
-│ ¿Quién puede asumir este rol?          │
+│ ¿Quién puede asumir este rol?           │
 │                                         │
 │ • EC2                                   │
 │ • Lambda                                │
-│ • Usuario específico                   │
-└─────────────────────────────────────────┘
+│ • Usuario específico                    │
+└────────────────────────────────────────┘
               ↓
-┌─────────────────────────────────────────┐
+┌────────────────────────────────────────┐
 │ POLÍTICAS DE PERMISOS                   │
-│ ¿Qué puede hacer quien asume el rol?   │
+│ ¿Qué puede hacer quien asume el rol?    │
 │                                         │
-│ • Leer S3                              │
-│ • Escribir DynamoDB                    │
-│ • Invocar Lambda                       │
-└─────────────────────────────────────────┘
+│ • Leer S3                               │
+│ • Escribir DynamoDB                     │
+│ • Invocar Lambda                        │
+└────────────────────────────────────────┘
 ```
 
-### 7.4 Ejemplo: Rol para EC2
+## 7.4 Ejemplo: Rol para EC2
 
-#### Escenario
+### Escenario
+
 ```
 Instancia EC2 → Necesita leer archivos de S3
 
@@ -1069,11 +1311,12 @@ Con Rol (✅ BUENO):
 - Sin código de credenciales
 ```
 
-### 7.5 Práctica: Crear Rol para EC2
+## 7.5 Práctica: Crear Rol para EC2
 
-#### Paso 1: Crear el Rol
-```bash
-# En la Consola de AWS
+### Paso 1: Crear el Rol
+
+```
+En la Consola de AWS:
 1. Navega a: IAM > Roles
 2. Click: "Create role"
 
@@ -1083,8 +1326,9 @@ Con Rol (✅ BUENO):
 5. Click: "Next"
 ```
 
-#### Paso 2: Agregar Permisos
-```bash
+### Paso 2: Agregar Permisos
+
+```
 # Adjuntar políticas
 6. Buscar y seleccionar:
    ☑ AmazonS3ReadOnlyAccess
@@ -1093,8 +1337,9 @@ Con Rol (✅ BUENO):
 7. Click: "Next"
 ```
 
-#### Paso 3: Nombrar y Crear
-```bash
+### Paso 3: Nombrar y Crear
+
+```
 # Detalles del rol
 8. Role name: "EC2-S3-ReadOnly-Role"
 9. Description: "Permite a instancias EC2 leer objetos de S3"
@@ -1106,19 +1351,21 @@ Con Rol (✅ BUENO):
 # ✅ Rol creado exitosamente
 ```
 
-### 7.6 Asignar Rol a Instancia EC2
+## 7.6 Asignar Rol a Instancia EC2
 
-#### Durante la Creación
-```bash
-# Al lanzar instancia EC2
+### Durante la Creación
+
+```
+Al lanzar instancia EC2:
 1. En "Configure instance details"
 2. IAM role: Seleccionar "EC2-S3-ReadOnly-Role"
 3. Continuar con el lanzamiento
 ```
 
-#### En Instancia Existente
-```bash
-# Para instancia ya creada
+### En Instancia Existente
+
+```
+Para instancia ya creada:
 1. Navega a: EC2 > Instances
 2. Seleccionar instancia
 3. Actions > Security > Modify IAM role
@@ -1128,7 +1375,8 @@ Con Rol (✅ BUENO):
 # ⚠️ Nota: Cambio toma efecto inmediatamente
 ```
 
-### 7.7 Verificar Rol desde EC2
+## 7.7 Verificar Rol desde EC2
+
 ```bash
 # Conectar a instancia EC2 vía SSH
 ssh -i mi-clave.pem ec2-user@ec2-ip-address
@@ -1153,10 +1401,11 @@ ssh -i mi-clave.pem ec2-user@ec2-ip-address
 # ✅ Funciona sin credenciales locales
 ```
 
-### 7.8 Ejemplo: Rol para Lambda
+## 7.8 Ejemplo: Rol para Lambda
 
-#### Crear Rol para Lambda
-```bash
+### Crear Rol para Lambda
+
+```
 # Paso 1: Crear rol
 1. IAM > Roles > Create role
 2. Trusted entity: "AWS service"
@@ -1174,7 +1423,8 @@ ssh -i mi-clave.pem ec2-user@ec2-ip-address
 8. Create role
 ```
 
-#### Política de Confianza (Trust Policy)
+### Política de Confianza (Trust Policy)
+
 ```json
 {
   "Version": "2012-10-17",
@@ -1192,9 +1442,10 @@ ssh -i mi-clave.pem ec2-user@ec2-ip-address
 
 Esta política dice: **"Lambda puede asumir este rol"**
 
-### 7.9 Rol para Acceso Cross-Account
+## 7.9 Rol para Acceso Cross-Account
 
-#### Escenario
+### Escenario
+
 ```
 Cuenta A (123456789012)
 └── Usuario: developer-A
@@ -1204,10 +1455,11 @@ Cuenta B (987654321098)
 └── Bucket S3: datos-compartidos
 ```
 
-#### Implementación
+### Implementación
 
 **En Cuenta B (donde está el recurso):**
-```bash
+
+```
 # Crear rol
 1. IAM > Roles > Create role
 2. Trusted entity: "AWS account"
@@ -1225,6 +1477,7 @@ Cuenta B (987654321098)
 ```
 
 **Política de Confianza:**
+
 ```json
 {
   "Version": "2012-10-17",
@@ -1246,8 +1499,10 @@ Cuenta B (987654321098)
 ```
 
 **En Cuenta A (quien asume el rol):**
-```bash
-# Usuario developer-A necesita permiso para asumir rol
+
+```
+Usuario developer-A necesita permiso para asumir rol:
+
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1261,6 +1516,7 @@ Cuenta B (987654321098)
 ```
 
 **Asumir el rol desde CLI:**
+
 ```bash
 # developer-A en Cuenta A
 aws sts assume-role \
@@ -1288,7 +1544,8 @@ export AWS_SESSION_TOKEN="..."
 aws s3 ls s3://datos-compartidos/
 ```
 
-### 7.10 Mejores Prácticas con Roles
+## 7.10 Mejores Prácticas con Roles
+
 ```
 ✅ Usar roles en lugar de credenciales hardcodeadas
 ✅ Principio de mínimo privilegio
@@ -1305,15 +1562,16 @@ aws s3 ls s3://datos-compartidos/
 
 ---
 
-## 8. Herramientas de Seguridad de IAM
+# 8. Herramientas de Seguridad de IAM
 
-### 8.1 IAM Credentials Report
+## 8.1 IAM Credentials Report
 
-#### ¿Qué es?
+### ¿Qué es?
 
 Informe a **nivel de cuenta** que lista todos los usuarios y el estado de sus credenciales.
 
-#### Información que Proporciona
+### Información que Proporciona
+
 ```
 Para cada usuario muestra:
 - Nombre de usuario
@@ -1328,9 +1586,10 @@ Para cada usuario muestra:
 - Certificados activos
 ```
 
-#### Práctica: Generar Credentials Report
-```bash
-# En la Consola de AWS
+### Práctica: Generar Credentials Report
+
+```
+En la Consola de AWS:
 1. Navega a: IAM > Credential report
 2. Click: "Download credential report"
 3. Se descarga archivo CSV
@@ -1338,7 +1597,8 @@ Para cada usuario muestra:
 # Abrir en Excel/LibreOffice para analizar
 ```
 
-#### Ejemplo de Credentials Report
+### Ejemplo de Credentials Report
+
 ```csv
 user,arn,user_creation_time,password_enabled,password_last_used,password_last_changed,password_next_rotation,mfa_active,access_key_1_active,access_key_1_last_rotated,access_key_1_last_used_date,access_key_2_active
 <root_account>,arn:aws:iam::123456789012:root,2020-01-01T00:00:00+00:00,not_supported,2024-01-20T10:00:00+00:00,not_supported,not_supported,true,false,N/A,N/A,false
@@ -1346,14 +1606,15 @@ john-developer,arn:aws:iam::123456789012:user/john-developer,2023-06-15T08:30:00
 alice-admin,arn:aws:iam::123456789012:user/alice-admin,2022-03-10T14:00:00+00:00,true,2024-01-18T11:30:00+00:00,2023-10-15T00:00:00+00:00,2024-01-15T00:00:00+00:00,false,true,2023-08-01T00:00:00+00:00,2024-01-20T08:15:00+00:00,true
 ```
 
-#### Análisis de Seguridad
+### Análisis de Seguridad
+
 ```bash
 # Identificar problemas:
 
 ⚠️ alice-admin:
-- MFA: NO activado ← RIESGO ALTO
-- Access Key 2: Activa ← Revisar si es necesaria
-- Password rotation: Vencida ← Requiere cambio
+- MFA: NO activado → RIESGO ALTO
+- Access Key 2: Activa → Revisar si es necesaria
+- Password rotation: Vencida → Requiere cambio
 
 ✅ john-developer:
 - MFA: Activado
@@ -1361,42 +1622,44 @@ alice-admin,arn:aws:iam::123456789012:user/alice-admin,2022-03-10T14:00:00+00:00
 - Access keys: Solo una activa, uso reciente
 
 🚨 root:
-- Password usado recientemente ← NO recomendado
+- Password usado recientemente → NO recomendado
 - Debe usar solo para configuración inicial
 ```
 
-### 8.2 IAM Access Advisor
+## 8.2 IAM Access Advisor
 
-#### ¿Qué es?
+### ¿Qué es?
 
 Herramienta a **nivel de usuario** que muestra:
 - Servicios a los que tiene permisos
 - Última vez que accedió a cada servicio
 
-#### Objetivo
+### Objetivo
 
 Identificar permisos no utilizados para aplicar el principio de mínimo privilegio.
 
-#### Práctica: Usar Access Advisor
-```bash
-# En la Consola de AWS
+### Práctica: Usar Access Advisor
+
+```
+En la Consola de AWS:
 1. Navega a: IAM > Users
 2. Selecciona: john-developer
 3. Tab: "Access Advisor"
 4. Ver tabla de servicios
 ```
 
-#### Ejemplo de Access Advisor
+### Ejemplo de Access Advisor
 
 | Servicio | Permisos | Último Acceso | Acción |
-|----------|----------|---------------|--------|
+|---|---|---|---|
 | Amazon S3 | ✅ Permitido | Hace 2 horas | ✅ Mantener |
 | Amazon EC2 | ✅ Permitido | Hace 45 días | ⚠️ Revisar |
 | Amazon RDS | ✅ Permitido | Nunca | 🗑️ **Eliminar** |
 | Amazon DynamoDB | ✅ Permitido | Hace 1 día | ✅ Mantener |
 | AWS Lambda | ✅ Permitido | Hace 90+ días | ⚠️ Revisar |
 
-#### Optimización de Permisos
+### Optimización de Permisos
+
 ```bash
 # Basado en Access Advisor:
 
@@ -1416,20 +1679,22 @@ Identificar permisos no utilizados para aplicar el principio de mínimo privileg
    → Monitorear regularmente
 ```
 
-### 8.3 IAM Policy Simulator
+## 8.3 IAM Policy Simulator
 
-#### ¿Qué es?
+### ¿Qué es?
 
 Herramienta para **testear políticas** antes de aplicarlas en producción.
 
-#### Acceso
+### Acceso
+
 ```
 https://policysim.aws.amazon.com/
 ```
 
-#### Práctica: Simular Política
-```bash
-# En IAM Policy Simulator
+### Práctica: Simular Política
+
+```
+En IAM Policy Simulator:
 1. Acceder a: https://policysim.aws.amazon.com/
 2. Select a User/Group/Role: john-developer
 3. Select Service: S3
@@ -1447,7 +1712,8 @@ https://policysim.aws.amazon.com/
 ❌ DeleteBucket: denied (explícitamente)
 ```
 
-#### Ejemplo de Simulación
+### Ejemplo de Simulación
+
 ```json
 // Política a testear
 {
@@ -1475,13 +1741,13 @@ https://policysim.aws.amazon.com/
 // ❌ NO puede eliminar ningún bucket
 ```
 
-### 8.4 AWS IAM Access Analyzer
+## 8.4 AWS IAM Access Analyzer
 
-#### ¿Qué es?
+### ¿Qué es?
 
 Identifica recursos compartidos con entidades externas a tu organización.
 
-#### Recursos Analizados
+### Recursos Analizados
 
 - Buckets S3
 - Roles IAM
@@ -1490,9 +1756,10 @@ Identifica recursos compartidos con entidades externas a tu organización.
 - Colas SQS
 - Secrets Manager
 
-#### Práctica: Activar Access Analyzer
-```bash
-# En la Consola de AWS
+### Práctica: Activar Access Analyzer
+
+```
+En la Consola de AWS:
 1. Navega a: IAM > Access analyzer
 2. Click: "Create analyzer"
 3. Analyzer name: "OrganizationAnalyzer"
@@ -1502,14 +1769,15 @@ Identifica recursos compartidos con entidades externas a tu organización.
    - Key: "Environment" | Value: "Production"
 6. Click: "Create analyzer"
 
-# ⏱️ Análisis inicial puede tomar varios minutos
+# ⏳ Análisis inicial puede tomar varios minutos
 ```
 
-#### Interpretación de Hallazgos
+### Interpretación de Hallazgos
+
 ```bash
 # Ejemplo de hallazgo:
 
-🔍 Finding: S3 Bucket "datos-publicos"
+📍 Finding: S3 Bucket "datos-publicos"
    Status: Active
    Resource Type: AWS::S3::Bucket
    Resource: arn:aws:s3:::datos-publicos
@@ -1528,9 +1796,10 @@ Identifica recursos compartidos con entidades externas a tu organización.
    4. Habilitar "Block Public Access"
 ```
 
-### 8.5 Práctica Completa de Herramientas de Seguridad
+## 8.5 Práctica Completa de Herramientas de Seguridad
 
-#### Auditoría Mensual Recomendada
+### Auditoría Mensual Recomendada
+
 ```bash
 # Semana 1: Credentials Report
 1. Descargar IAM Credentials Report
@@ -1560,9 +1829,10 @@ Identifica recursos compartidos con entidades externas a tu organización.
 
 ---
 
-## 9. Mejores Prácticas de IAM
+# 9. Mejores Prácticas de IAM
 
-### 9.1 Principios Fundamentales
+## 9.1 Principios Fundamentales
+
 ```
 🔐 Seguridad ante Todo
 📉 Mínimo Privilegio
@@ -1571,9 +1841,10 @@ Identifica recursos compartidos con entidades externas a tu organización.
 🛡️ Defensa en Profundidad
 ```
 
-### 9.2 Cuenta Root
+## 9.2 Cuenta Root
 
-#### ❌ NO Hacer
+### ❌ NO Hacer
+
 ```
 ❌ Usar root para operaciones diarias
 ❌ Crear access keys para root
@@ -1582,22 +1853,26 @@ Identifica recursos compartidos con entidades externas a tu organización.
 ❌ Permitir acceso programático a root
 ```
 
-#### ✅ SÍ Hacer
+### ✅ SÍ Hacer
+
+```
 ✅ Solo usar para configuración inicial
 ✅ Activar MFA inmediatamente
 ✅ Crear alias de cuenta
 ✅ Almacenar credenciales en lugar seguro
-✅ Configurar información deRetryClaude does not have the ability to run the code it generates yet.LContinuecontacto alternativa
+✅ Configurar información de contacto alternativa
 ✅ Habilitar notificaciones de facturación
 ✅ Crear usuarios IAM para operaciones diarias
+```
 
-#### Tareas que SOLO Root Puede Hacer
+### Tareas que SOLO Root Puede Hacer
+
 ```
 1. Cambiar configuración de la cuenta
    - Nombre de cuenta
    - Email
    - Contraseña root
-   
+
 2. Cerrar cuenta de AWS
 
 3. Cambiar o cancelar plan AWS Support
@@ -1611,9 +1886,10 @@ Identifica recursos compartidos con entidades externas a tu organización.
 7. Registrarse en AWS GovCloud
 ```
 
-### 9.3 Gestión de Usuarios
+## 9.3 Gestión de Usuarios
 
-#### 1 Usuario Físico = 1 Usuario IAM
+### 1 Usuario Físico = 1 Usuario IAM
+
 ```
 ✅ CORRECTO:
 Juan Pérez → juan.perez@empresa.com
@@ -1625,7 +1901,8 @@ Equipo de Dev → dev-team@empresa.com (compartida)
 Cuenta Admin → admin@empresa.com (compartida)
 ```
 
-#### Organización por Grupos
+### Organización por Grupos
+
 ```
 Empresa
 │
@@ -1651,10 +1928,11 @@ Empresa
     └── laura.analyst
 ```
 
-### 9.4 Gestión de Contraseñas
+## 9.4 Gestión de Contraseñas
 
-#### Política de Contraseña Recomendada
-```bash
+### Política de Contraseña Recomendada
+
+```
 Configuración en IAM > Account settings:
 
 ☑ Minimum password length: 14 caracteres
@@ -1668,7 +1946,8 @@ Configuración en IAM > Account settings:
 ☑ Prevent password reuse: 5 contraseñas recordadas
 ```
 
-#### Ejemplo de Contraseña Fuerte
+### Ejemplo de Contraseña Fuerte
+
 ```
 ❌ DÉBIL:
 - password123
@@ -1686,7 +1965,8 @@ Recomendación: Usar gestor de contraseñas
 - Bitwarden
 ```
 
-### 9.5 Autenticación Multifactor (MFA)
+## 9.5 Autenticación Multifactor (MFA)
+
 ```
 ✅ OBLIGATORIO MFA para:
    - Usuario Root
@@ -1700,7 +1980,8 @@ Recomendación: Usar gestor de contraseñas
    - Operaciones críticas (vía Condition)
 ```
 
-#### Implementar MFA Obligatorio
+### Implementar MFA Obligatorio
+
 ```json
 {
   "Version": "2012-10-17",
@@ -1728,16 +2009,18 @@ Recomendación: Usar gestor de contraseñas
 }
 ```
 
-### 9.6 Gestión de Claves de Acceso
+## 9.6 Gestión de Claves de Acceso
 
-#### Ciclo de Vida de Claves
+### Ciclo de Vida de Claves
+
 ```
 Creación → Uso Activo → Rotación → Desactivación → Eliminación
     ↓          ↓           ↓            ↓              ↓
   Día 0    Días 1-89   Día 90      Día 91-97      Día 98
 ```
 
-#### Script de Monitoreo (Python)
+### Script de Monitoreo (Python)
+
 ```python
 import boto3
 from datetime import datetime, timezone, timedelta
@@ -1777,7 +2060,8 @@ for user in users:
         print()
 ```
 
-#### Proceso de Rotación
+### Proceso de Rotación
+
 ```bash
 # Paso 1: Crear nueva clave
 aws iam create-access-key --user-name john-developer
@@ -1811,7 +2095,8 @@ aws iam delete-access-key \
   --access-key-id AKIAIOSFODNN7EXAMPLE
 ```
 
-### 9.7 Uso de Roles vs Usuarios
+## 9.7 Uso de Roles vs Usuarios
+
 ```
 Preferir ROLES en lugar de USUARIOS para:
 
@@ -1827,9 +2112,10 @@ Usar USUARIOS solo para:
 - Desarrolladores que usan CLI/SDK localmente
 ```
 
-### 9.8 Políticas: Menos es Más
+## 9.8 Políticas: Menos es Más
 
-#### Estrategia de Políticas
+### Estrategia de Políticas
+
 ```
 1. Empezar con Políticas AWS Managed
    ✅ Mantenidas por AWS
@@ -1847,7 +2133,8 @@ Usar USUARIOS solo para:
    ❌ Se eliminan con el usuario/rol
 ```
 
-#### Ejemplo de Refinamiento
+### Ejemplo de Refinamiento
+
 ```json
 // ❌ Política demasiado permisiva
 {
@@ -1900,9 +2187,10 @@ Usar USUARIOS solo para:
 }
 ```
 
-### 9.9 Etiquetado (Tagging)
+## 9.9 Etiquetado (Tagging)
 
-#### Estrategia de Tags
+### Estrategia de Tags
+
 ```bash
 # Tags recomendados para recursos IAM
 
@@ -1920,7 +2208,8 @@ Rol IAM:
 - Application: WebApp
 ```
 
-#### Uso de Tags en Políticas
+### Uso de Tags en Políticas
+
 ```json
 {
   "Version": "2012-10-17",
@@ -1944,11 +2233,12 @@ Rol IAM:
 }
 ```
 
-### 9.10 Auditoría y Monitoreo
+## 9.10 Auditoría y Monitoreo
 
-#### Configurar CloudTrail
-```bash
-# CloudTrail registra TODAS las llamadas API
+### Configurar CloudTrail
+
+```
+CloudTrail registra TODAS las llamadas API
 
 1. Navega a: CloudTrail > Trails
 2. Click: "Create trail"
@@ -1963,9 +2253,10 @@ Rol IAM:
 # ✅ Ahora todas las acciones IAM se registran
 ```
 
-#### Alertas Críticas con CloudWatch
-```bash
-# Crear alarma para cambios en IAM
+### Alertas Críticas con CloudWatch
+
+```
+Crear alarma para cambios en IAM
 
 1. CloudWatch > Log groups
 2. Seleccionar grupo de CloudTrail
@@ -1997,76 +2288,79 @@ Rol IAM:
 7. Email: security-team@empresa.com
 ```
 
-### 9.11 Checklist de Mejores Prácticas
-```markdown
-## Checklist IAM Security
+## 9.11 Checklist de Mejores Prácticas
 
+### Checklist IAM Security
+
+```markdown
 ### Cuenta Root
-- [ ] MFA activado
-- [ ] Sin access keys
-- [ ] Solo usada para tareas que requieren root
-- [ ] Email y teléfono alternativos configurados
+- ☑ MFA activado
+- ☑ Sin access keys
+- ☑ Solo usada para tareas que requieren root
+- ☑ Email y teléfono alternativos configurados
 
 ### Usuarios
-- [ ] Un usuario por persona física
-- [ ] Todos con MFA habilitado
-- [ ] Organizados en grupos
-- [ ] Sin políticas inline
-- [ ] Access keys rotadas < 90 días
-- [ ] Contraseñas fuertes y rotadas
+- ☑ Un usuario por persona física
+- ☑ Todos con MFA habilitado
+- ☑ Organizados en grupos
+- ☑ Sin políticas inline
+- ☑ Access keys rotadas < 90 días
+- ☑ Contraseñas fuertes y rotadas
 
 ### Grupos
-- [ ] Nombres descriptivos
-- [ ] Políticas AWS Managed cuando sea posible
-- [ ] Documentados en wiki/confluence
+- ☑ Nombres descriptivos
+- ☑ Políticas AWS Managed cuando sea posible
+- ☑ Documentados en wiki/confluence
 
 ### Roles
-- [ ] Usados para servicios AWS
-- [ ] Usados para aplicaciones
-- [ ] Trust policies restrictivas
-- [ ] Políticas de mínimo privilegio
+- ☑ Usados para servicios AWS
+- ☑ Usados para aplicaciones
+- ☑ Trust policies restrictivas
+- ☑ Políticas de mínimo privilegio
 
 ### Políticas
-- [ ] Principio de mínimo privilegio
-- [ ] Deny explícitos cuando sea necesario
-- [ ] Condiciones para MFA en operaciones críticas
-- [ ] Versionadas y documentadas
-- [ ] Revisadas trimestralmente
+- ☑ Principio de mínimo privilegio
+- ☑ Deny explícitos cuando sea necesario
+- ☑ Condiciones para MFA en operaciones críticas
+- ☑ Versionadas y documentadas
+- ☑ Revisadas trimestralmente
 
 ### Monitoreo
-- [ ] CloudTrail habilitado
-- [ ] Alarmas para cambios en IAM
-- [ ] Credentials Report mensual
-- [ ] Access Advisor revisado
-- [ ] Access Analyzer activo
+- ☑ CloudTrail habilitado
+- ☑ Alarmas para cambios en IAM
+- ☑ Credentials Report mensual
+- ☑ Access Advisor revisado
+- ☑ Access Analyzer activo
 
 ### Documentación
-- [ ] Diagrama de grupos y roles
-- [ ] Procedimiento de onboarding
-- [ ] Procedimiento de offboarding
-- [ ] Plan de respuesta a incidentes
+- ☑ Diagrama de grupos y roles
+- ☑ Procedimiento de onboarding
+- ☑ Procedimiento de offboarding
+- ☑ Plan de respuesta a incidentes
 ```
 
 ---
 
-## 10. Modelo de Responsabilidad Compartida
+# 10. Modelo de Responsabilidad Compartida
 
-### 10.1 Concepto General
+## 10.1 Concepto General
+
 ```
-┌─────────────────────────────────────────────┐
-│          RESPONSABILIDAD COMPARTIDA         │
-├─────────────────────────────────────────────┤
-│                                             │
-│  AWS                         CLIENTE       │
-│  ────                        ───────       │
-│  Seguridad DEL Cloud        EN el Cloud    │
-│                                             │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│      RESPONSABILIDAD COMPARTIDA          │
+├─────────────────────────────────────────┤
+│                                          │
+│  AWS                        CLIENTE      │
+│  ────                       ──────       │
+│  Seguridad DEL Cloud        EN el Cloud  │
+│                                          │
+└─────────────────────────────────────────┘
 ```
 
-### 10.2 Responsabilidades de AWS
+## 10.2 Responsabilidades de AWS
+
 ```
-🔧 AWS es Responsable de:
+AWS es Responsable de:
 
 1. Infraestructura
    - Hardware físico
@@ -2096,9 +2390,10 @@ Rol IAM:
    - Configuración base
 ```
 
-### 10.3 Responsabilidades del Cliente (TÚ)
+## 10.3 Responsabilidades del Cliente (TÚ)
+
 ```
-👤 TÚ eres Responsable de:
+TÚ eres Responsable de:
 
 1. Gestión de Identidades
    ✅ Crear usuarios IAM
@@ -2143,10 +2438,10 @@ Rol IAM:
    ✅ Configurar logging
 ```
 
-### 10.4 Matriz de Responsabilidades
+## 10.4 Matriz de Responsabilidades
 
 | Área | AWS | Cliente |
-|------|-----|---------|
+|---|---|---|
 | **Data Centers** | ✅ Construir y mantener | ❌ |
 | **Redes Globales** | ✅ Operar y mantener | ❌ |
 | **Hardware** | ✅ Proveer y mantener | ❌ |
@@ -2163,96 +2458,102 @@ Rol IAM:
 
 ⚠️ = Responsabilidad compartida
 
-### 10.5 Ejemplo Práctico: S3
+## 10.5 Ejemplo Práctico: S3
+
 ```
 Bucket S3: "datos-empresa"
 
-┌─────────────────────────────────────────────┐
-│ AWS Responsable:                            │
-├─────────────────────────────────────────────┤
-│ ✅ Hardware de almacenamiento               │
-│ ✅ Replicación entre AZs                    │
-│ ✅ Durabilidad (11 nines)                   │
-│ ✅ Disponibilidad del servicio              │
-│ ✅ Protección física de data centers        │
-│ ✅ Networking entre regiones                │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ AWS Responsable:                         │
+├─────────────────────────────────────────┤
+│ ✅ Hardware de almacenamiento            │
+│ ✅ Replicación entre AZs                 │
+│ ✅ Durabilidad (11 nines)                │
+│ ✅ Disponibilidad del servicio           │
+│ ✅ Protección física de data centers     │
+│ ✅ Networking entre regiones             │
+└─────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────┐
-│ CLIENTE (TÚ) Responsable:                   │
-├─────────────────────────────────────────────┤
-│ ✅ Configuración de bucket policy           │
-│ ✅ Habilitar/deshabilitar acceso público    │
-│ ✅ Configurar encriptación                  │
-│ ✅ Configurar versionado                    │
-│ ✅ Gestionar permisos IAM para acceso       │
-│ ✅ Configurar logging                       │
-│ ✅ Configurar lifecycle policies            │
-│ ✅ Clasificar y proteger datos              │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ CLIENTE (TÚ) Responsable:                │
+├─────────────────────────────────────────┤
+│ ✅ Configuración de bucket policy        │
+│ ✅ Habilitar/deshabilitar acceso público │
+│ ✅ Configurar encriptación               │
+│ ✅ Configurar versionado                 │
+│ ✅ Gestionar permisos IAM para acceso    │
+│ ✅ Configurar logging                    │
+│ ✅ Configurar lifecycle policies         │
+│ ✅ Clasificar y proteger datos           │
+└─────────────────────────────────────────┘
 ```
 
-### 10.6 Ejemplo Práctico: EC2
+## 10.6 Ejemplo Práctico: EC2
+
 ```
 Instancia EC2: "web-server"
 
-┌─────────────────────────────────────────────┐
-│ AWS Responsable:                            │
-├─────────────────────────────────────────────┤
-│ ✅ Hardware físico (CPU, RAM, disco)        │
-│ ✅ Hypervisor                               │
-│ ✅ Aislamiento entre instancias             │
-│ ✅ Red física                               │
-│ ✅ Sustitución de hardware defectuoso       │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ AWS Responsable:                         │
+├─────────────────────────────────────────┤
+│ ✅ Hardware físico (CPU, RAM, disco)     │
+│ ✅ Hypervisor                            │
+│ ✅ Aislamiento entre instancias          │
+│ ✅ Red física                            │
+│ ✅ Sustitución de hardware defectuoso    │
+└─────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────┐
-│ CLIENTE (TÚ) Responsable:                   │
-├─────────────────────────────────────────────┤
-│ ✅ Sistema operativo (patching, updates)    │
-│ ✅ Aplicaciones instaladas                  │
-│ ✅ Security Groups                          │
-│ ✅ Network ACLs                             │
-│ ✅ Roles IAM para la instancia              │
-│ ✅ Datos almacenados                        │
-│ ✅ Encriptación de disco (EBS)              │
-│ ✅ Backups/snapshots                        │
-│ ✅ Firewall del SO                          │
-│ ✅ Antivirus/antimalware                    │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ CLIENTE (TÚ) Responsable:                │
+├─────────────────────────────────────────┤
+│ ✅ Sistema operativo (patching, updates) │
+│ ✅ Aplicaciones instaladas               │
+│ ✅ Security Groups                       │
+│ ✅ Network ACLs                          │
+│ ✅ Roles IAM para la instancia           │
+│ ✅ Datos almacenados                     │
+│ ✅ Encriptación de disco (EBS)           │
+│ ✅ Backups/snapshots                     │
+│ ✅ Firewall del SO                       │
+│ ✅ Antivirus/antimalware                 │
+└─────────────────────────────────────────┘
 ```
 
-### 10.7 Responsabilidades por Tipo de Servicio
+## 10.7 Responsabilidades por Tipo de Servicio
 
-#### IaaS (EC2)
+### IaaS (EC2)
+
 ```
 Cliente tiene MÁS responsabilidad
 
 AWS: Hardware, hypervisor, red física
-Tú: SO, apps, datos, networking, seguridad
+TÚ: SO, apps, datos, networking, seguridad
 ```
 
-#### PaaS (RDS, Elastic Beanstalk)
+### PaaS (RDS, Elastic Beanstalk)
+
 ```
 Responsabilidad COMPARTIDA equilibrada
 
 AWS: Hardware, SO, patching, backups automáticos
-Tú: Datos, usuarios DB, networking, security groups
+TÚ: Datos, usuarios DB, networking, security groups
 ```
 
-#### SaaS (S3, DynamoDB)
+### SaaS (S3, DynamoDB)
+
 ```
 AWS tiene MÁS responsabilidad
 
 AWS: Todo excepto tus datos y configuración
-Tú: Datos, permisos, configuración de servicio
+TÚ: Datos, permisos, configuración de servicio
 ```
 
 ---
 
-## 11. Resumen
+# 11. Resumen
 
-### 11.1 Conceptos Clave de IAM
+## 11.1 Conceptos Clave de IAM
+
 ```markdown
 ## IAM - Identity and Access Management
 
@@ -2272,9 +2573,10 @@ Servicio GLOBAL de AWS para gestionar identidades y permisos
 - ✅ Integrado con todos los servicios AWS
 ```
 
-### 11.2 Puntos Críticos para el Examen
+## 11.2 Puntos Críticos para el Examen
+
 ```
-🎯 MEMORIZAR PARA EL EXAMEN:
+MEMORIZAR PARA EL EXAMEN:
 
 1. IAM es GLOBAL, no regional
 
@@ -2322,7 +2624,8 @@ Servicio GLOBAL de AWS para gestionar identidades y permisos
     - Access Analyzer (recursos externos)
 ```
 
-### 11.3 Comandos AWS CLI Esenciales
+## 11.3 Comandos AWS CLI Esenciales
+
 ```bash
 # Identidad
 aws sts get-caller-identity
@@ -2356,9 +2659,10 @@ aws iam list-mfa-devices --user-name usuario
 aws iam enable-mfa-device --user-name usuario --serial-number arn:aws:iam::123456789012:mfa/usuario --authentication-code-1 123456 --authentication-code-2 789012
 ```
 
-### 11.4 Políticas de Ejemplo Importantes
+## 11.4 Políticas de Ejemplo Importantes
 
-#### Solo Lectura Global
+### Solo Lectura Global
+
 ```json
 {
   "Version": "2012-10-17",
@@ -2376,7 +2680,8 @@ aws iam enable-mfa-device --user-name usuario --serial-number arn:aws:iam::12345
 }
 ```
 
-#### Requerir MFA
+### Requerir MFA
+
 ```json
 {
   "Version": "2012-10-17",
@@ -2395,7 +2700,8 @@ aws iam enable-mfa-device --user-name usuario --serial-number arn:aws:iam::12345
 }
 ```
 
-#### Limitar por IP
+### Limitar por IP
+
 ```json
 {
   "Version": "2012-10-17",
@@ -2417,20 +2723,22 @@ aws iam enable-mfa-device --user-name usuario --serial-number arn:aws:iam::12345
 }
 ```
 
-### 11.5 Flujo de Decisión de Políticas
+## 11.5 Flujo de Decisión de Políticas
+
+```
 ┌──────────────────────────────────────┐
 │ Solicitud llega a AWS                │
-└────────────┬─────────────────────────┘
-│
-▼
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
 ┌──────────────────────────────────────┐
 │ ¿Hay un DENY explícito?              │
 ├──────────────────────────────────────┤
 │ Sí → DENEGAR ACCESO ❌               │
 │ No → Continuar ↓                     │
-└────────────┬─────────────────────────┘
-│
-▼
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
 ┌──────────────────────────────────────┐
 │ ¿Hay un ALLOW explícito?             │
 ├──────────────────────────────────────┤
@@ -2438,20 +2746,16 @@ aws iam enable-mfa-device --user-name usuario --serial-number arn:aws:iam::12345
 │ No → DENEGAR ACCESO ❌               │
 │      (deny implícito por defecto)    │
 └──────────────────────────────────────┘
+
 REGLA DE ORO: DENY SIEMPRE GANA
+```
 
 ---
 
-## 12. Cuestionario de Evaluación
+# 12. Preguntas y Respuestas - Preparación para Examen
 
-### Instrucciones
-- Selecciona la(s) respuesta(s) correcta(s)
-- Algunas preguntas tienen múltiples respuestas correctas
-- Revisa tus respuestas al final
+## Pregunta 1
 
----
-
-### Pregunta 1
 **¿Cuál es la definición correcta de los roles IAM?**
 
 A) Identidades permanentes para usuarios finales que necesitan acceder a AWS
@@ -2471,9 +2775,8 @@ Explicación: Los roles IAM son identidades que pueden ser asumidas temporalment
 
 </details>
 
----
+## Pregunta 2
 
-### Pregunta 2
 **¿Cuál de las siguientes es una herramienta de seguridad IAM?**
 
 A) CloudWatch Metrics
@@ -2493,9 +2796,8 @@ Explicación: IAM Access Advisor es una herramienta de seguridad que muestra los
 
 </details>
 
----
+## Pregunta 3
 
-### Pregunta 3
 **¿Qué respuesta es INCORRECTA respecto a los usuarios de IAM?**
 
 A) Los usuarios IAM pueden pertenecer a múltiples grupos
@@ -2515,308 +2817,530 @@ Explicación: Los usuarios IAM NO necesitan obligatoriamente acceso a la consola
 
 </details>
 
----
+## Pregunta 4
 
-### Pregunta 4
 **¿Cuál de las siguientes es una buena práctica de IAM?**
 
 A) Usar la cuenta root para operaciones diarias
 
 B) Crear access keys para la cuenta root
 
-C) Habilitar MFA para todos losRetryClaude does not have the ability to run the code it generates yet.LContinueusuarios con acceso a producción
+C) Habilitar MFA para todos los usuarios con acceso a producción
+
 D) Compartir credenciales entre miembros del mismo equipo
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: Habilitar MFA (Multi-Factor Authentication) para usuarios con acceso a producción es una práctica de seguridad crítica. Las opciones A, B y D son malas prácticas que comprometen la seguridad.
+
 </details>
 
-Pregunta 5
-¿Qué son las políticas IAM?
+## Pregunta 5
+
+**¿Qué son las políticas IAM?**
+
 A) Grupos de usuarios organizados por función
+
 B) Documentos JSON que definen permisos y controlan el acceso a recursos AWS
+
 C) Credenciales temporales para acceso programático
+
 D) Dispositivos de autenticación multifactor
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: Las políticas IAM son documentos en formato JSON que especifican qué acciones están permitidas o denegadas en qué recursos de AWS. Son el mecanismo principal para definir permisos.
+
 </details>
 
-Pregunta 6
-En el modelo de responsabilidad compartida, ¿de qué es responsable el cliente en IAM?
+## Pregunta 6
+
+**En el modelo de responsabilidad compartida, ¿de qué es responsable el cliente en IAM?**
+
 A) Seguridad física de los data centers donde se ejecuta IAM
+
 B) Gestión y supervisión de usuarios, grupos, roles y políticas
+
 C) Mantenimiento del hardware de los servidores de autenticación
+
 D) Actualización del software base del servicio IAM
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: El cliente es responsable de gestionar y supervisar sus usuarios, grupos, roles y políticas IAM. AWS es responsable de la infraestructura física, el hardware y el software base del servicio.
+
 </details>
 
-Pregunta 7
-¿Cuál de las siguientes afirmaciones es VERDADERA?
+## Pregunta 7
+
+**¿Cuál de las siguientes afirmaciones es VERDADERA?**
+
 A) Los grupos IAM pueden contener otros grupos
+
 B) Un usuario IAM puede pertenecer a un máximo de un grupo
+
 C) Las políticas se pueden adjuntar a grupos para aplicar permisos a todos sus usuarios
+
 D) Los grupos IAM pueden asumir roles
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: Las políticas adjuntas a un grupo se aplican automáticamente a todos los usuarios miembros de ese grupo, facilitando la gestión de permisos. Los grupos NO pueden contener otros grupos, un usuario puede estar en múltiples grupos, y los grupos no pueden asumir roles (solo usuarios y servicios pueden hacerlo).
+
 </details>
 
-Pregunta 8
-¿Qué principio debes aplicar con respecto a los permisos de IAM?
+## Pregunta 8
+
+**¿Qué principio debes aplicar con respecto a los permisos de IAM?**
+
 A) Principio de máxima disponibilidad
+
 B) Principio de mínimo privilegio (least privilege)
+
 C) Principio de segregación de datos
+
 D) Principio de acceso público por defecto
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: El principio de mínimo privilegio (least privilege) significa otorgar solo los permisos necesarios para realizar una tarea, nada más. Esto minimiza el riesgo de seguridad en caso de que una cuenta sea comprometida.
+
 </details>
 
-Pregunta 9
-¿Qué debes hacer para aumentar la seguridad de tu cuenta root?
+## Pregunta 9
+
+**¿Qué debes hacer para aumentar la seguridad de tu cuenta root?**
+
 A) Crear múltiples access keys para tener respaldo
+
 B) Compartir las credenciales con el equipo de administradores
+
 C) Habilitar MFA (autenticación multifactor)
+
 D) Usar la cuenta root para todas las operaciones diarias
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: Habilitar MFA en la cuenta root es crítico para la seguridad. Añade una capa adicional de protección más allá de la contraseña. La cuenta root NO debe tener access keys, NO debe compartirse, y NO debe usarse para operaciones diarias.
+
 </details>
 
-Pregunta 10
-¿Qué componentes forman las claves de acceso de AWS? (SELECCIONA DOS)
+## Pregunta 10
+
+**¿Qué componentes forman las claves de acceso de AWS? (SELECCIONA DOS)**
+
 A) Access Key ID
+
 B) Username
+
 C) Secret Access Key
+
 D) Session Token
+
 E) Password
+
 <details>
 <summary>Ver respuesta</summary>
-Respuestas Correctas: A y C
+
+**Respuestas Correctas: A y C**
+
 Explicación: Las claves de acceso de AWS constan de dos partes: Access Key ID (similar a un nombre de usuario) y Secret Access Key (similar a una contraseña). Ambas son necesarias para el acceso programático vía CLI o SDK.
+
 </details>
 
-Pregunta 11
-¿Cuál es el formato correcto de una política IAM?
+## Pregunta 11
+
+**¿Cuál es el formato correcto de una política IAM?**
+
 A) XML
+
 B) JSON
+
 C) YAML
+
 D) Plain Text
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: Las políticas IAM se escriben en formato JSON (JavaScript Object Notation). Tienen una estructura específica con elementos como Version, Statement, Effect, Action y Resource.
+
 </details>
 
-Pregunta 12
-En una política IAM, ¿qué efecto tiene SIEMPRE prioridad?
+## Pregunta 12
+
+**En una política IAM, ¿qué efecto tiene SIEMPRE prioridad?**
+
 A) Allow
+
 B) Deny
+
 C) El primero que aparezca en el documento
+
 D) Depende del orden de las políticas adjuntas
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: En IAM, un Deny SIEMPRE tiene prioridad sobre un Allow, sin importar el orden. Esto es fundamental para la seguridad: si existe una denegación explícita, el acceso es denegado incluso si hay permisos que lo permitirían.
+
 </details>
 
-Pregunta 13
-¿Para qué se utiliza AWS CloudShell?
+## Pregunta 13
+
+**¿Para qué se utiliza AWS CloudShell?**
+
 A) Para gestionar instancias EC2 desde el navegador
+
 B) Como terminal basada en navegador preautenticada con AWS CLI
+
 C) Para crear scripts de automatización en Python
+
 D) Para monitorear logs de aplicaciones
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: AWS CloudShell es una terminal basada en navegador que viene preautenticada con tus credenciales de AWS y preinstalada con AWS CLI, Python, Node.js y otras herramientas. No requiere configuración de credenciales.
+
 </details>
 
-Pregunta 14
-¿Cuál de las siguientes NO es una opción válida de dispositivo MFA en AWS?
+## Pregunta 14
+
+**¿Cuál de las siguientes NO es una opción válida de dispositivo MFA en AWS?**
+
 A) Google Authenticator (aplicación virtual)
+
 B) YubiKey (hardware U2F)
+
 C) SMS al teléfono móvil
+
 D) Gemalto (hardware token)
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: AWS no soporta MFA por SMS. Las opciones válidas son: aplicaciones virtuales (Google Authenticator, Authy), llaves de seguridad U2F (YubiKey), y tokens de hardware (Gemalto, SurePassID).
+
 </details>
 
-Pregunta 15
-¿Qué herramienta IAM te permite ver qué servicios ha accedido un usuario y cuándo?
+## Pregunta 15
+
+**¿Qué herramienta IAM te permite ver qué servicios ha accedido un usuario y cuándo?**
+
 A) IAM Credentials Report
+
 B) IAM Access Analyzer
+
 C) IAM Access Advisor
+
 D) IAM Policy Simulator
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: IAM Access Advisor muestra los servicios a los que un usuario tiene permisos y la última vez que accedió a cada uno. Es útil para identificar permisos no utilizados y aplicar el principio de mínimo privilegio.
+
 </details>
 
-Pregunta 16
-¿Cuál es el límite de tiempo máximo de sesión para credenciales temporales de un rol asumido?
+## Pregunta 16
+
+**¿Cuál es el límite de tiempo máximo de sesión para credenciales temporales de un rol asumido?**
+
 A) 15 minutos
+
 B) 1 hora
+
 C) 12 horas
+
 D) 36 horas
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: Las credenciales temporales de un rol asumido pueden durar desde 15 minutos hasta 12 horas (por defecto es 1 hora). Esto proporciona un balance entre seguridad y conveniencia operativa.
+
 </details>
 
-Pregunta 17
-¿Qué archivo almacena las credenciales de AWS CLI en Linux/Mac?
+## Pregunta 17
+
+**¿Qué archivo almacena las credenciales de AWS CLI en Linux/Mac?**
+
 A) ~/.aws/config
+
 B) ~/.aws/credentials
+
 C) /etc/aws/credentials
+
 D) ~/.awscli/credentials
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: El archivo ~/.aws/credentials almacena las access keys (Access Key ID y Secret Access Key). El archivo ~/.aws/config almacena la configuración como región y formato de salida.
+
 </details>
 
-Pregunta 18
-¿Cuál es la URL para acceder al IAM Policy Simulator?
+## Pregunta 18
+
+**¿Cuál es la URL para acceder al IAM Policy Simulator?**
+
 A) https://simulator.aws.amazon.com
+
 B) https://iam.aws.amazon.com/simulator
+
 C) https://policysim.aws.amazon.com
+
 D) https://console.aws.amazon.com/iam/simulator
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: El IAM Policy Simulator está disponible en https://policysim.aws.amazon.com y permite probar políticas IAM sin aplicarlas en producción.
+
 </details>
 
-Pregunta 19
-¿Con qué frecuencia se recomienda rotar las access keys?
+## Pregunta 19
+
+**¿Con qué frecuencia se recomienda rotar las access keys?**
+
 A) Cada 30 días
+
 B) Cada 90 días
+
 C) Cada 180 días
+
 D) Una vez al año
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: La mejor práctica de AWS recomienda rotar las access keys cada 90 días. Esto minimiza el riesgo de exposición de credenciales comprometidas.
+
 </details>
 
-Pregunta 20
-¿Qué servicio proporciona credenciales temporales para asumir roles?
+## Pregunta 20
+
+**¿Qué servicio proporciona credenciales temporales para asumir roles?**
+
 A) AWS IAM
+
 B) AWS STS (Security Token Service)
+
 C) AWS KMS
+
 D) AWS Secrets Manager
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: AWS STS (Security Token Service) es el servicio que proporciona credenciales de seguridad temporales de corta duración para usuarios que asumen roles IAM.
+
 </details>
 
-Pregunta 21 (Múltiple Respuesta)
-¿Cuáles de las siguientes son mejores prácticas de IAM? (SELECCIONA TRES)
+## Pregunta 21 (Múltiple Respuesta)
+
+**¿Cuáles de las siguientes son mejores prácticas de IAM? (SELECCIONA TRES)**
+
 A) Usar la cuenta root solo para configuración inicial de la cuenta
+
 B) Habilitar MFA en todas las cuentas
+
 C) Compartir access keys entre desarrolladores del mismo equipo
+
 D) Crear usuarios IAM individuales para cada persona
+
 E) Almacenar credenciales en el código fuente para fácil acceso
+
 <details>
 <summary>Ver respuesta</summary>
-Respuestas Correctas: A, B y D
+
+**Respuestas Correctas: A, B y D**
+
 Explicación:
 
-A: Correcto, la cuenta root solo debe usarse para tareas administrativas específicas
-B: Correcto, MFA añade una capa crítica de seguridad
-C: Incorrecto, las credenciales nunca deben compartirse
-D: Correcto, cada persona debe tener su propio usuario IAM
-E: Incorrecto, nunca almacenar credenciales en código fuente
+A) Correcto, la cuenta root solo debe usarse para tareas administrativas específicas
+
+B) Correcto, MFA añade una capa crítica de seguridad
+
+C) Incorrecto, las credenciales nunca deben compartirse
+
+D) Correcto, cada persona debe tener su propio usuario IAM
+
+E) Incorrecto, nunca almacenar credenciales en código fuente
 
 </details>
 
-Pregunta 22
-¿Qué elemento de una política IAM especifica si se permite o deniega una acción?
+## Pregunta 22
+
+**¿Qué elemento de una política IAM especifica si se permite o deniega una acción?**
+
 A) Action
+
 B) Resource
+
 C) Effect
+
 D) Principal
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: C
+
+**Respuesta Correcta: C**
+
 Explicación: El elemento "Effect" en una política IAM especifica si la declaración resulta en "Allow" (permitir) o "Deny" (denegar). Es obligatorio en cada declaración de política.
+
 </details>
 
-Pregunta 23
-¿Cuál de las siguientes tareas SOLO puede realizar el usuario root?
+## Pregunta 23
+
+**¿Cuál de las siguientes tareas SOLO puede realizar el usuario root?**
+
 A) Crear usuarios IAM
+
 B) Cerrar la cuenta de AWS
+
 C) Lanzar instancias EC2
+
 D) Crear buckets S3
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: Cerrar una cuenta de AWS es una de las pocas acciones que solo puede realizar el usuario root. Otras incluyen cambiar configuración de la cuenta, modificar plan de soporte, y registrarse en GovCloud.
+
 </details>
 
-Pregunta 24
-¿Qué genera el IAM Credentials Report? (SELECCIONA DOS)
+## Pregunta 24
+
+**¿Qué genera el IAM Credentials Report? (SELECCIONA DOS)**
+
 A) Estado de las contraseñas de todos los usuarios
+
 B) Configuración de seguridad de instancias EC2
+
 C) Estado de las claves de acceso de todos los usuarios
+
 D) Logs de acceso a S3
+
 <details>
 <summary>Ver respuesta</summary>
-Respuestas Correctas: A y C
+
+**Respuestas Correctas: A y C**
+
 Explicación: El IAM Credentials Report es un informe a nivel de cuenta que incluye información sobre contraseñas y access keys de todos los usuarios, incluyendo fechas de creación, último uso y estado de MFA.
+
 </details>
 
-Pregunta 25
-¿Qué comando AWS CLI muestra tu identidad actual?
+## Pregunta 25
+
+**¿Qué comando AWS CLI muestra tu identidad actual?**
+
 A) aws iam get-user
+
 B) aws sts get-caller-identity
+
 C) aws iam whoami
+
 D) aws configure list
+
 <details>
 <summary>Ver respuesta</summary>
-Respuesta Correcta: B
+
+**Respuesta Correcta: B**
+
 Explicación: El comando aws sts get-caller-identity muestra información sobre la identidad que estás usando actualmente, incluyendo UserId, Account y ARN.
+
 </details>
 
-📊 Tabla de Respuestas Rápidas
-PreguntaRespuesta(s)PreguntaRespuesta(s)1B14C2B15C3B16C4C17B5B18C6B19B7C20B8B21A, B, D9C22C10A, C23B11B24A, C12B25B13B
+---
 
-📚 Recursos Adicionales
-Documentación Oficial de AWS
+## Tabla de Respuestas Rápidas
 
-IAM User Guide
-IAM Best Practices
-IAM Policy Reference
+| Pregunta | Respuesta(s) | Pregunta | Respuesta(s) |
+|----------|---|----------|---|
+| 1 | B | 14 | C |
+| 2 | B | 15 | C |
+| 3 | B | 16 | C |
+| 4 | C | 17 | B |
+| 5 | B | 18 | C |
+| 6 | B | 19 | B |
+| 7 | C | 20 | B |
+| 8 | B | 21 | A, B, D |
+| 9 | C | 22 | C |
+| 10 | A, C | 23 | B |
+| 11 | B | 24 | A, C |
+| 12 | B | 25 | B |
+| 13 | B | | |
 
-Tutoriales Prácticos
+---
 
-Getting Started with IAM
-IAM Tutorial: Delegate Access
+## Recursos Adicionales
 
-Herramientas
+### Documentación Oficial de AWS
 
-IAM Policy Simulator
-IAM Policy Generator
+- [IAM User Guide](https://docs.aws.amazon.com/iam/)
+- [IAM Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+- [IAM Policy Reference](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies.html)
 
+### Tutoriales Prácticos
 
-🎓 Preparación para el Examen Cloud Practitioner
-Temas IAM Clave para el Examen
-markdown✅ Dominar completamente:
+- [Getting Started with IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started.html)
+- [IAM Tutorial: Delegate Access](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html)
+
+### Herramientas
+
+- [IAM Policy Simulator](https://policysim.aws.amazon.com/)
+- [IAM Policy Generator](https://awspolicygen.s3.amazonaws.com/policygen.html)
+
+---
+
+## Preparación para el Examen Cloud Practitioner
+
+### Temas IAM Clave para el Examen
+
+```markdown
+✅ Dominar completamente:
 - Concepto de usuarios, grupos, roles y políticas
 - Diferencias entre usuarios y roles
 - Principio de mínimo privilegio
@@ -2837,33 +3361,40 @@ markdown✅ Dominar completamente:
 - Cross-account access
 - Federación de identidades (concepto)
 - IAM Access Analyzer
-Tips para el Examen
+```
 
-Lee cuidadosamente: Identifica si preguntan por usuarios, grupos o roles
-Principio de mínimo privilegio: Siempre elige la opción con menos permisos
-MFA es crítico: Si hay una opción de seguridad con MFA, suele ser correcta
-Root account: Nunca debe usarse para operaciones normales
-Deny gana: Recuerda que Deny siempre tiene prioridad sobre Allow
+### Tips para el Examen
 
+- Lee cuidadosamente: Identifica si preguntan por usuarios, grupos o roles
+- Principio de mínimo privilegio: Siempre elige la opción con menos permisos
+- MFA es crítico: Si hay una opción de seguridad con MFA, suele ser correcta
+- Root account: Nunca debe usarse para operaciones normales
+- Deny gana: Recuerda que Deny siempre tiene prioridad sobre Allow
 
-🎯 Checklist Final
+### Checklist Final
+
 Antes de dar el examen, verifica que puedas:
-markdown- [ ] Explicar qué es IAM y por qué es importante
-- [ ] Crear y gestionar usuarios, grupos y roles
-- [ ] Escribir políticas IAM básicas
-- [ ] Configurar MFA en una cuenta
-- [ ] Instalar y configurar AWS CLI
-- [ ] Usar CloudShell
-- [ ] Generar y gestionar access keys
-- [ ] Crear roles para servicios EC2/Lambda
-- [ ] Interpretar IAM Credentials Report
-- [ ] Usar IAM Access Advisor
-- [ ] Explicar el modelo de responsabilidad compartida
-- [ ] Aplicar las mejores prácticas de IAM
 
-📝 Notas Finales
+- ✅ Explicar qué es IAM y por qué es importante
+- ✅ Crear y gestionar usuarios, grupos y roles
+- ✅ Escribir políticas IAM básicas
+- ✅ Configurar MFA en una cuenta
+- ✅ Instalar y configurar AWS CLI
+- ✅ Usar CloudShell
+- ✅ Generar y gestionar access keys
+- ✅ Crear roles para servicios EC2/Lambda
+- ✅ Interpretar IAM Credentials Report
+- ✅ Usar IAM Access Advisor
+- ✅ Explicar el modelo de responsabilidad compartida
+- ✅ Aplicar las mejores prácticas de IAM
+
+---
+
+## Notas Finales
+
 Este material cubre exhaustivamente todo lo relacionado con IAM para el examen AWS Certified Cloud Practitioner. Practica los conceptos en tu propia cuenta de AWS (usa la capa gratuita) para reforzar el aprendizaje.
-¡Buena suerte en tu examen! 🚀
 
-Última actualización: 2024
-Versión del curso: AWS Certified Cloud Practitioner CLF-C02RetryClaude does not have the ability to run the code it generates yet.
+¡Buena suerte en tu examen!
+
+**Última actualización**: 21/10/2025  
+**Versión del curso**: AWS Certified Cloud Practitioner CLF-C02
