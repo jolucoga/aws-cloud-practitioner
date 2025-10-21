@@ -51,4 +51,11 @@ El mantenimiento de este repositorio sigue estrictos estándares de calidad y ge
 
 ---
 ***
-*Última Actualización: 20 de Octubre del 2025*
+## Notas Finales
+
+Este material cubre exhaustivamente los fundamentos para el examen de certificación AWS Certified Cloud Practitioner CLF-C02. Practica los conceptos en tu propia cuenta de AWS (usa la capa gratuita) para reforzar el aprendizaje.
+
+¡Buena suerte en tu examen!
+
+**Última actualización**: 21/10/2025  
+**Versión del curso**: AWS Certified Cloud Practitioner CLF-C02
