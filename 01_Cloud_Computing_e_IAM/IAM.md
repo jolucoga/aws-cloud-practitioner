@@ -141,11 +141,12 @@ Contraseña: [contraseña temporal]
 → Sistema solicita cambio de contraseña
 → Ingresar nueva contraseña fuerte
 → Acceso concedido
+```
 
-3. Políticas IAM
-3.1 ¿Qué son las Políticas IAM?
+## 3. Políticas IAM
+### 3.1 ¿Qué son las Políticas IAM?
 Las políticas son documentos JSON que definen permisos. Se aplican a usuarios, grupos o roles para controlar qué acciones pueden realizar en qué recursos.
-3.2 Estructura de una Política IAM
+### 3.2 Estructura de una Política IAM
 json{
   "Version": "2012-10-17",
   "Id": "S3-Account-Permissions",
@@ -169,10 +170,10 @@ json{
     }
   ]
 }
-3.3 Componentes de una Política
+### 3.3 Componentes de una Política
 ElementoDescripciónObligatorioVersionVersión del lenguaje (siempre "2012-10-17")SíIdIdentificador de la políticaNoStatementArray de declaracionesSíSidID de la declaraciónNoEffect"Allow" o "Deny"SíPrincipalCuenta/usuario/rol al que aplicaDepende*ActionAcciones permitidas/denegadasSíResourceRecursos afectadosSíConditionCondiciones opcionalesNo
 *Requerido en políticas basadas en recursos
-3.4 Tipos de Políticas
+### 3.4 Tipos de Políticas
 1. Políticas Gestionadas por AWS
 Creadas y mantenidas por AWS:
 json{
@@ -201,8 +202,8 @@ json{
 3. Políticas Inline
 Integradas directamente en un usuario/grupo/rol específico (no recomendado):
 bash# Las políticas inline NO son reutilizables
-# Se eliminan cuando se elimina el usuario/grupo/rol
-```
+    # Se eliminan cuando se elimina el usuario/grupo/rol
+
 
 ### 3.5 Herencia de Políticas
 ```
@@ -213,7 +214,8 @@ Grupo: Developers
     └── Charles (hereda DeveloperAccess)
         └── Política Inline: ExtraPermissions
             └── Resultado: DeveloperAccess + ExtraPermissions
-3.6 Práctica: Crear y Aplicar Políticas
+```
+### 3.6 Práctica: Crear y Aplicar Políticas
 Crear Política Personalizada
 bash# En la Consola de AWS
 1. Navega a: IAM > Policies
@@ -256,20 +258,20 @@ json{
 }
 Adjuntar Política a un Grupo
 bash1. Navega a: IAM > User groups
-2. Selecciona: "Developers"
-3. Tab: "Permissions"
-4. Click: "Add permissions" > "Attach policies"
-5. Buscar: "MyAppS3ReadOnly"
-6. ☑ Marcar la política
-7. Click: "Add permissions"
+    2. Selecciona: "Developers"
+    3. Tab: "Permissions"
+    4. Click: "Add permissions" > "Attach policies"
+    5. Buscar: "MyAppS3ReadOnly"
+    6. ☑ Marcar la política
+    7. Click: "Add permissions"
 Adjuntar Política a un Usuario
 bash1. Navega a: IAM > Users
-2. Selecciona: "john-developer"
-3. Tab: "Permissions"
-4. Click: "Add permissions" > "Attach policies directly"
-5. Buscar y seleccionar política
-6. Click: "Add permissions"
-3.7 Ejemplo Práctico: Usuario en Múltiples Grupos
+    2. Selecciona: "john-developer"
+    3. Tab: "Permissions"
+    4. Click: "Add permissions" > "Attach policies directly"
+    5. Buscar y seleccionar política
+    6. Click: "Add permissions"
+### 3.7 Ejemplo Práctico: Usuario en Múltiples Grupos
 Escenario
 Charles necesita acceso como desarrollador Y como auditor.
 bash# Estructura:
@@ -285,10 +287,11 @@ Charles
         ├── CloudWatch Logs (read-only)
         └── IAM (read-only)
 
-# Permisos Finales de Charles:
-# = DevelopmentAccess + AuditAccess
+    # Permisos Finales de Charles:
+    # = DevelopmentAccess + AuditAccess
 Implementación
-bash# Paso 1: Crear grupos con sus políticas
+bash
+# Paso 1: Crear grupos con sus políticas
 1. Crear "Developers" con "DevelopmentAccess"
 2. Crear "Auditors" con "AuditAccess"
 
@@ -299,7 +302,7 @@ bash# Paso 1: Crear grupos con sus políticas
 4. ☑ Developers
 5. ☑ Auditors
 6. Click: "Add permissions"
-3.8 Política de Denegación Explícita
+### 3.8 Política de Denegación Explícita
 La denegación SIEMPRE tiene prioridad:
 json{
   "Version": "2012-10-17",
@@ -317,7 +320,8 @@ json{
   ]
 }
 Resultado: Puede hacer TODO en S3 EXCEPTO eliminar buckets.
-3.9 Ejemplos de Políticas Comunes
+### 3.9 Ejemplos de Políticas Comunes
+```
 Acceso Completo a EC2
 json{
   "Version": "2012-10-17",
@@ -551,7 +555,8 @@ Access Key = Access Key ID + Secret Access Key
 ✅ Usar roles cuando sea posible
 ✅ Principio de mínimo privilegio
 ✅ Eliminar claves no usadas
-5.3 AWS CLI (Command Line Interface)
+```
+### 5.3 AWS CLI (Command Line Interface)
 ¿Qué es AWS CLI?
 Herramienta que permite interactuar con AWS mediante comandos en terminal.
 bash# Ejemplo de comando
@@ -568,7 +573,7 @@ Características
 ✅ Multiplataforma (Windows, macOS, Linux)
 ✅ Alternativa a la consola web
 
-5.4 Instalación de AWS CLI
+### 5.4 Instalación de AWS CLI
 Windows
 powershell# Método 1: MSI Installer
 # Descargar de: https://aws.amazon.com/cli/
