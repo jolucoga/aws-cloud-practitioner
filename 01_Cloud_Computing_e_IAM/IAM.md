@@ -1,21 +1,6 @@
 
-📖 Tabla de Contenidos
-
-1. Introducción a IAM
-2. Usuarios y Grupos de IAM
-3. Políticas IAM
-4. Autenticación Multifactor (MFA)
-5. Acceso Programático: CLI y SDK
-6. AWS CloudShell
-7. Roles de IAM
-8. Herramientas de Seguridad IAM
-9. Mejores Prácticas de IAM
-10. Modelo de Responsabilidad Compartida
-11. Resumen
-12. Cuestionario de Evaluación
-
-
-1. Introducción a IAM
+## 1. Introducción a IAM
+```
 ¿Qué es IAM?
 IAM (Identity and Access Management) es un servicio global de AWS que permite controlar de forma segura el acceso a los servicios y recursos de AWS.
 Características Principales
@@ -88,15 +73,17 @@ Organización AWS
     └── David (también en Operaciones)
 Reglas Importantes de Grupos
 ✅ Permitido❌ No PermitidoUsuario en múltiples gruposGrupos dentro de otros gruposUsuario sin grupo (no recomendado)Usar grupos como identidades en políticasAsignar políticas a gruposGrupos con permisos de root
-2.3 Práctica: Crear Usuarios y Grupos
-Paso 1: Crear un Grupo
+```
+
+### 2.3 Práctica: Crear Usuarios y Grupos
+#### Paso 1: Crear un Grupo
 bash# Acceso a la Consola de AWS
 1. Navega a: IAM > User groups
 2. Click: "Create group"
 3. Nombre: "Developers"
 4. Adjuntar políticas (opcional en creación)
 5. Click: "Create group"
-Paso 2: Crear un Usuario
+#### Paso 2: Crear un Usuario
 bash# En la Consola de IAM
 1. Navega a: IAM > Users
 2. Click: "Create user"
@@ -106,7 +93,7 @@ bash# En la Consola de IAM
    - Console password: Auto-generated o Custom
    - ☑ Users must create a new password at next sign-in (recomendado)
 4. Click: "Next"
-Paso 3: Asignar Permisos
+#### Paso 3: Asignar Permisos
 Opción A: Agregar a un Grupo
 bash1. Seleccionar: "Add user to group"
 2. Marcar: "Developers"
@@ -119,14 +106,14 @@ Opción C: Copiar Permisos
 bash1. Seleccionar: "Copy permissions from existing user"
 2. Elegir usuario de referencia
 3. Click: "Next"
-Paso 4: Revisar y Crear
+#### Paso 4: Revisar y Crear
 bash1. Revisar configuración
 2. Tags (opcional pero recomendado):
    - Key: "Department" | Value: "Engineering"
    - Key: "Environment" | Value: "Production"
 3. Click: "Create user"
 4. ⚠️ IMPORTANTE: Descargar credenciales (única oportunidad)
-```
+
 
 ### 2.4 Acceso como Usuario IAM
 
