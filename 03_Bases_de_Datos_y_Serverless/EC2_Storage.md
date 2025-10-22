@@ -1,4 +1,5 @@
-1. Visión General de EBS (Elastic Block Store)
+## 1. Visión General de EBS (Elastic Block Store)
+```
 Amazon EBS (Elastic Block Store) es un servicio de almacenamiento en bloque de alto rendimiento diseñado para su uso con Amazon EC2. Proporciona volúmenes de almacenamiento persistentes que pueden adjuntarse a instancias EC2.
 ¿Qué es un Volumen EBS?
 Un volumen EBS es una unidad de red (no un disco físico) que puedes adjuntar a tus instancias mientras se ejecutan. Esto permite que tus datos persistan incluso después de que la instancia se detenga o termine.
