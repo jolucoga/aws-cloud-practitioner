@@ -3125,7 +3125,12 @@ Continúa tu preparación con el módulo de **Almacenamiento EC2** donde aprende
 ¡Sigue así! 🚀
 
 ---
+***
+## Notas Finales
 
-**Última actualización**: Octubre 2024  
-**Versión**: 1.0  
-**Autor**: Basado en el curso AWS Certified Cloud Practitioner
+Este material cubre la Introducción a Intancias EC2 para el examen AWS Certified Cloud Practitioner. Practica los conceptos en tu propia cuenta de AWS (usa la capa gratuita) para reforzar el aprendizaje.
+
+¡Buena suerte en tu examen!
+
+**Última actualización**: 22/10/2025  
+**Versión del curso**: AWS Certified Cloud Practitioner CLF-C02
