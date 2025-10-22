@@ -1974,4 +1974,1158 @@ Tu responsabilidad:
 - [ ] CloudWatch alarms configuradas
 - [ ] CloudTrail habilitado
 - [ ] Revisión regular de logs
-- [ ] AWS Config
+- [ ] AWS Config para auditoría de configuración
+
+### ⚠️ Errores Comunes y Responsabilidades
+
+| Error | ¿De quién es la responsabilidad? | Solución |
+|-------|----------------------------------|----------|
+| Instancia hackeada por puerto SSH abierto | 🔶 Cliente | Restringir Security Group |
+| Hardware del servidor falla | 🔷 AWS | AWS reemplaza automáticamente |
+| Software desactualizado con vulnerabilidad | 🔶 Cliente | Aplicar parches regularmente |
+| Pérdida de datos por no hacer backup | 🔶 Cliente | Implementar estrategia de backup |
+| Interrupción de servicio en AZ | 🔷 AWS | AWS restaura servicio |
+| Credenciales IAM expuestas en GitHub | 🔶 Cliente | Rotar credenciales, usar Secrets Manager |
+| Datos robados por acceso no autorizado | 🔶 Cliente | Revisar políticas IAM y S3 |
+
+### 🎯 Mejores Prácticas
+
+#### Para AWS (lo que ellos hacen):
+
+- Mantener infraestructura física segura
+- Proporcionar servicios con alta disponibilidad
+- Mantener certificaciones de cumplimiento
+- Actualizar y parchear infraestructura subyacente
+
+#### Para el Cliente (lo que TÚ debes hacer):
+
+**1. Implementar el principio de mínimo privilegio**
+
+```
+✅ Roles con permisos específicos
+✅ Security Groups restrictivos
+✅ No usar credenciales root
+```
+
+**2. Mantener sistemas actualizados**
+
+```bash
+# Automatizar actualizaciones
+sudo yum update -y
+
+# O usar AWS Systems Manager Patch Manager
+```
+
+**3. Habilitar cifrado**
+
+```
+✅ EBS volumes cifrados
+✅ S3 buckets con SSE-S3 o SSE-KMS
+✅ RDS con cifrado en reposo
+✅ SSL/TLS para datos en tránsito
+```
+
+**4. Implementar monitorización y alertas**
+
+```
+✅ CloudWatch Logs
+✅ CloudTrail para auditoría
+✅ AWS Config para compliance
+✅ GuardDuty para detección de amenazas
+```
+
+**5. Realizar backups regulares**
+
+```
+✅ Snapshots de EBS automáticos
+✅ Backups de RDS
+✅ Versionado de S3
+✅ AWS Backup para centralizar
+```
+
+---
+
+## Resumen
+
+### 🎯 Puntos Clave de EC2
+
+#### 1. ¿Qué es EC2?
+
+```
+EC2 = Elastic Compute Cloud
+- IaaS (Infrastructure as a Service)
+- Máquinas virtuales en el cloud
+- Escalable y flexible
+- Pago por uso
+```
+
+#### 2. Componentes principales:
+
+**AMI (Amazon Machine Image)**
+
+```
+- Sistema operativo (Linux, Windows, Mac)
+- Software preinstalado
+- Configuración del sistema
+```
+
+**Tipo de Instancia**
+
+```
+Tamaño = CPU + RAM
+
+Categorías:
+- Propósito general (t2, m5)
+- Computación optimizada (c5)
+- Memoria optimizada (r5)
+- Almacenamiento optimizado (i3, d2)
+```
+
+**Almacenamiento**
+
+```
+- EBS (Elastic Block Store) - persistente
+- Instance Store - efímero
+- EFS (Elastic File System) - compartido
+```
+
+**Configuración de Red**
+
+```
+- VPC (Virtual Private Cloud)
+- Subnet pública o privada
+- Security Groups
+- IP pública/privada
+```
+
+**User Data**
+
+```bash
+#!/bin/bash
+# Script que se ejecuta en el primer arranque
+yum update -y
+yum install -y httpd
+systemctl start httpd
+```
+
+#### 3. Security Groups
+
+```
+Firewall virtual a nivel de instancia
+
+Reglas:
+✅ Solo ALLOW (permitir)
+✅ Stateful (respuestas automáticas)
+✅ Por IP o por Security Group
+
+Puertos importantes:
+- 22: SSH (Linux)
+- 3389: RDP (Windows)
+- 80: HTTP
+- 443: HTTPS
+```
+
+#### 4. Conexión a Instancias
+
+| Método | Sistema | Requisito |
+|--------|---------|-----------|
+| SSH | Linux/Mac | Key pair .pem |
+| PuTTY | Windows <10 | Key pair .ppk |
+| SSH | Windows 10+ | Key pair .pem |
+| Instance Connect | Todos | Navegador |
+
+#### 5. Roles IAM
+
+```
+✅ HACER: Usar roles IAM para acceso a AWS services
+❌ NO HACER: Usar aws configure en instancias
+
+Ventajas:
+- Sin credenciales expuestas
+- Rotación automática
+- Auditable con CloudTrail
+```
+
+#### 6. Opciones de Compra
+
+| Opción | Ahorro | Uso |
+|--------|--------|-----|
+| On-Demand | 0% | Flexible, impredecible |
+| Reserved | Hasta 72% | Estable, 1-3 años |
+| Savings Plans | Hasta 72% | Flexible con compromiso |
+| Spot | Hasta 90% | Tolerante a interrupciones |
+| Dedicated | Varía | Cumplimiento normativo |
+
+#### 7. Modelo de Responsabilidad Compartida
+
+```
+AWS → Seguridad DEL cloud
+- Hardware
+- Infraestructura global
+- Servicios gestionados
+
+CLIENTE → Seguridad EN el cloud
+- Security Groups
+- Parches del SO
+- Datos y cifrado
+- Roles IAM
+- Configuración de aplicaciones
+```
+
+### 📊 Diagrama Completo de Arquitectura EC2
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    AWS Cloud                        │
+│                                                     │
+│  ┌───────────────────────────────────────────────┐ │
+│  │              Región (us-east-1)               │ │
+│  │                                               │ │
+│  │  ┌─────────────────────────────────────────┐ │ │
+│  │  │    Availability Zone 1a                 │ │ │
+│  │  │                                         │ │ │
+│  │  │  ┌──────────────────────────────────┐  │ │ │
+│  │  │  │         VPC (10.0.0.0/16)        │  │ │ │
+│  │  │  │                                  │  │ │ │
+│  │  │  │  ┌────────────────────────────┐ │  │ │ │
+│  │  │  │  │   Public Subnet            │ │  │ │ │
+│  │  │  │  │   (10.0.1.0/24)            │ │  │ │ │
+│  │  │  │  │                            │ │  │ │ │
+│  │  │  │  │  ┌──────────────────────┐ │ │  │ │ │
+│  │  │  │  │  │   Security Group     │ │ │  │ │ │
+│  │  │  │  │  │   - SSH: 22          │ │ │  │ │ │
+│  │  │  │  │  │   - HTTP: 80         │ │ │  │ │ │
+│  │  │  │  │  │   - HTTPS: 443       │ │ │  │ │ │
+│  │  │  │  │  └──────────┬───────────┘ │ │  │ │ │
+│  │  │  │  │             │             │ │  │ │ │
+│  │  │  │  │  ┌──────────▼───────────┐ │ │  │ │ │
+│  │  │  │  │  │   EC2 Instance       │ │ │  │ │ │
+│  │  │  │  │  │   t2.micro           │ │ │  │ │ │
+│  │  │  │  │  │   Amazon Linux 2     │ │ │  │ │ │
+│  │  │  │  │  │   ┌────────────────┐ │ │ │  │ │ │
+│  │  │  │  │  │   │   IAM Role     │ │ │ │  │ │ │
+│  │  │  │  │  │   │   S3ReadOnly   │ │ │ │  │ │ │
+│  │  │  │  │  │   └────────────────┘ │ │ │  │ │ │
+│  │  │  │  │  │   ┌────────────────┐ │ │ │  │ │ │
+│  │  │  │  │  │   │   EBS Volume   │ │ │ │  │ │ │
+│  │  │  │  │  │   │   8 GB gp2     │ │ │ │  │ │ │
+│  │  │  │  │  │   └────────────────┘ │ │ │  │ │ │
+│  │  │  │  │  └──────────────────────┘ │ │  │ │ │
+│  │  │  │  └────────────────────────────┘ │  │ │ │
+│  │  │  └──────────────────────────────────┘  │ │ │
+│  │  └─────────────────────────────────────────┘ │ │
+│  └───────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────┘
+         ▲
+         │
+         │ SSH / HTTP
+         │
+    ┌────┴─────┐
+    │  Usuario │
+    └──────────┘
+```
+
+### 🎓 Preparación para el Examen
+
+#### Temas que DEBES dominar:
+
+**1. Tipos de instancias EC2**
+
+- Propósito general, computación, memoria, almacenamiento
+- Nomenclatura (m5.2xlarge)
+
+**2. Security Groups**
+
+- Stateful vs NACL (stateless)
+- Reglas de entrada/salida
+- Puertos comunes (22, 80, 443, 3389)
+
+**3. Opciones de compra**
+
+- On-Demand, Reserved, Spot, Dedicated
+- Casos de uso para cada una
+- Niveles de ahorro
+
+**4. Roles IAM**
+
+- ¿Por qué usar roles en vez de credenciales?
+- Cómo asignar roles a EC2
+
+**5. User Data**
+
+- Se ejecuta una sola vez
+- Con privilegios root
+- Para bootstrap/configuración inicial
+
+**6. Modelo de responsabilidad compartida**
+
+- Qué gestiona AWS
+- Qué gestionas tú
+
+#### Preguntas típicas del examen:
+
+**Pregunta 1:**
+
+```
+Una empresa necesita ejecutar cargas de trabajo de procesamiento 
+por lotes que pueden interrumpirse sin problemas. ¿Qué opción 
+de compra proporciona el mayor ahorro?
+
+A) On-Demand Instances
+B) Reserved Instances
+C) Spot Instances ✅
+D) Dedicated Hosts
+
+Respuesta: C - Spot ofrece hasta 90% descuento y es ideal para 
+cargas tolerantes a interrupciones.
+```
+
+**Pregunta 2:**
+
+```
+¿Qué es responsabilidad del cliente en el modelo de 
+responsabilidad compartida para EC2?
+
+A) Mantenimiento del hardware físico
+B) Parches del sistema operativo ✅
+C) Seguridad del hipervisor
+D) Mantenimiento de la red física
+
+Respuesta: B - El cliente debe mantener el SO actualizado.
+```
+
+**Pregunta 3:**
+
+```
+Una aplicación web necesita permitir tráfico HTTP desde 
+cualquier lugar. ¿Qué configuración de Security Group es correcta?
+
+A) Type: HTTP, Port: 80, Source: 0.0.0.0/0 ✅
+B) Type: HTTP, Port: 443, Source: Mi IP
+C) Type: HTTPS, Port: 80, Source: 0.0.0.0/0
+D) Type: SSH, Port: 22, Source: 0.0.0.0/0
+
+Respuesta: A - HTTP usa puerto 80 y debe permitir todo el tráfico.
+```
+
+**Pregunta 4:**
+
+```
+¿Cuál es la mejor práctica para que una instancia EC2
+acceda a un bucket de S3?
+
+A) Configurar credenciales con aws configure
+B) Hardcodear Access Key en la aplicación
+C) Asignar un rol IAM a la instancia ✅
+D) Compartir la contraseña root de AWS
+
+Respuesta: C - Los roles IAM son la forma segura y recomendada.
+```
+
+### ✅ Checklist Final
+
+Antes del examen, asegúrate de poder responder:
+
+- [ ] ¿Qué es EC2 y para qué sirve?
+- [ ] ¿Cuáles son los componentes de una instancia EC2?
+- [ ] ¿Qué tipos de instancias existen y sus casos de uso?
+- [ ] ¿Cómo funcionan los Security Groups?
+- [ ] ¿Cuáles son los puertos más comunes? (22, 80, 443, 3389)
+- [ ] ¿Cómo conectarse a una instancia EC2?
+- [ ] ¿Por qué usar roles IAM en lugar de credenciales?
+- [ ] ¿Qué son los User Data y cuándo se ejecutan?
+- [ ] ¿Cuáles son las opciones de compra y sus ahorros?
+- [ ] ¿Qué es responsabilidad de AWS vs el cliente?
+- [ ] ¿Cuándo usar On-Demand vs Reserved vs Spot?
+- [ ] ¿Qué sucede con la IP pública al detener una instancia?
+
+### 📚 Recursos Adicionales
+
+**Documentación oficial:**
+
+- EC2 User Guide: https://docs.aws.amazon.com/ec2/
+- Security Groups: https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html
+- Instance Types: https://aws.amazon.com/ec2/instance-types/
+- Pricing: https://aws.amazon.com/ec2/pricing/
+
+**Herramientas útiles:**
+
+- Calculadora de precios: https://calculator.aws/
+- Comparador de instancias: https://instances.vantage.sh/
+- EC2 Instance Connect: Desde la consola de AWS
+
+**Práctica:**
+
+- AWS Free Tier: 750 horas/mes de t2.micro
+- Siempre terminar instancias después de practicar
+- Configurar presupuestos para evitar cargos
+
+---
+
+## 🎉 ¡Felicidades!
+
+Has completado el módulo de EC2. Ahora deberías ser capaz de:
+
+- ✅ Lanzar y configurar instancias EC2
+- ✅ Implementar Security Groups correctamente
+- ✅ Conectarte a instancias mediante SSH
+- ✅ Asignar roles IAM a instancias
+- ✅ Elegir la opción de compra adecuada
+- ✅ Entender el modelo de responsabilidad compartida
+
+### 🚀 Próximos Pasos
+
+1. **Practicar** lanzando diferentes tipos de instancias
+2. **Experimentar** con User Data scripts
+3. **Configurar** Security Groups restrictivos
+4. **Asignar** roles IAM para acceso a S3
+5. **Calcular** costos con diferentes opciones de compra
+6. **Realizar** el cuestionario de EC2
+
+¡Mucho éxito en tu preparación para el examen AWS Cloud Practitioner! 🎓
+
+---
+
+**Última actualización**: Octubre 2024  
+**Versión**: 1.0  
+**Autor**: Basado en el curso AWS Certified Cloud Practitioner
+
+---
+
+## Cuestionario - Amazon EC2
+
+### Instrucciones
+
+- Este cuestionario contiene 20 preguntas sobre Amazon EC2
+- Cada pregunta tiene una o más respuestas correctas
+- Lee cuidadosamente cada pregunta antes de responder
+- Tiempo estimado: 30 minutos
+
+---
+
+### Preguntas
+
+#### Pregunta 1
+
+**¿Qué significa EC2?**
+
+A) Elastic Container Cloud  
+B) Elastic Compute Cloud  
+C) Elastic Configuration Cloud  
+D) Elastic Computing Cluster
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+EC2 significa Elastic Compute Cloud. Es el servicio de máquinas virtuales de AWS y uno de los servicios más fundamentales de la plataforma.
+
+</details>
+
+---
+
+#### Pregunta 2
+
+**Una empresa necesita ejecutar una aplicación web 24/7 durante los próximos 3 años con carga predecible. ¿Qué opción de compra de EC2 proporciona el mayor ahorro?**
+
+A) On-Demand Instances  
+B) Spot Instances  
+C) Reserved Instances (3 años, pago total adelantado)  
+D) Dedicated Hosts
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+Reserved Instances con compromiso de 3 años y pago total adelantado ofrecen el mayor descuento (hasta 72%) para cargas de trabajo predecibles y de larga duración.
+
+- On-Demand: 0% descuento
+- Spot: Hasta 90% pero puede interrumpirse
+- Reserved 3 años: Hasta 72% descuento
+- Dedicated Hosts: Más caro, para cumplimiento normativo
+
+</details>
+
+---
+
+#### Pregunta 3
+
+**¿Cuál de las siguientes es responsabilidad del cliente en el modelo de responsabilidad compartida para EC2?**
+
+A) Mantenimiento del hardware físico del servidor  
+B) Actualización y parcheo del sistema operativo invitado  
+C) Seguridad del hipervisor  
+D) Mantenimiento de la infraestructura de red del data center
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+El cliente es responsable de actualizar y parchear el sistema operativo de sus instancias EC2.
+
+**AWS es responsable de:**
+- Hardware físico
+- Hipervisor
+- Infraestructura de red del data center
+- Aislamiento entre clientes
+
+**El cliente es responsable de:**
+- Sistema operativo invitado
+- Aplicaciones
+- Security Groups
+- Datos y cifrado
+
+</details>
+
+---
+
+#### Pregunta 4
+
+**¿Qué puertos deben estar abiertos en un Security Group para permitir que los usuarios accedan a un sitio web mediante HTTPS?**
+
+A) Puerto 22  
+B) Puerto 80  
+C) Puerto 443  
+D) Puerto 3389
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+El puerto 443 es utilizado por el protocolo HTTPS para conexiones web seguras.
+
+**Puertos comunes:**
+- 22: SSH (Linux)
+- 80: HTTP (web no segura)
+- 443: HTTPS (web segura)
+- 3389: RDP (Windows Remote Desktop)
+
+</details>
+
+---
+
+#### Pregunta 5
+
+**¿Cuándo se ejecuta el script de User Data de EC2?**
+
+A) Cada vez que se inicia la instancia  
+B) Solo la primera vez que se inicia la instancia  
+C) Cada vez que se detiene la instancia  
+D) Manualmente por el usuario
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+El script de User Data se ejecuta solo una vez, durante el primer arranque de la instancia. Se utiliza para automatizar la configuración inicial (bootstrap).
+
+**Características:**
+- Se ejecuta con privilegios de root
+- Solo en el primer inicio
+- Útil para: instalar software, actualizar sistema, configurar servicios
+
+</details>
+
+---
+
+#### Pregunta 6
+
+**Una startup está desarrollando una nueva aplicación y no puede predecir los patrones de uso. ¿Qué opción de compra es la más adecuada?**
+
+A) Reserved Instances  
+B) On-Demand Instances  
+C) Spot Instances  
+D) Dedicated Hosts
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+On-Demand Instances son ideales cuando:
+- El uso es impredecible
+- No hay compromiso a largo plazo
+- Se requiere máxima flexibilidad
+- Es un proyecto nuevo o en desarrollo
+
+A pesar de ser la opción más cara, ofrece flexibilidad total sin compromisos.
+
+</details>
+
+---
+
+#### Pregunta 7
+
+**¿Cuál es la mejor práctica para que una instancia EC2 acceda a objetos en un bucket de S3?**
+
+A) Configurar credenciales de AWS usando aws configure  
+B) Hardcodear las Access Keys en el código de la aplicación  
+C) Asignar un rol IAM a la instancia EC2  
+D) Usar las credenciales del usuario root de AWS
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+Asignar un rol IAM a la instancia es la mejor práctica porque:
+
+- ✅ No expone credenciales
+- ✅ Rotación automática de credenciales temporales
+- ✅ Fácil de auditar
+- ✅ Sigue el principio de mínimo privilegio
+
+**❌ NUNCA usar:**
+- aws configure en instancias EC2
+- Access Keys hardcodeadas
+- Credenciales root
+
+</details>
+
+---
+
+#### Pregunta 8
+
+**¿Qué tipo de instancia EC2 es la más adecuada para una aplicación de análisis de big data que requiere grandes cantidades de RAM?**
+
+A) Instancia de propósito general (T2, M5)  
+B) Instancia optimizada para computación (C5)  
+C) Instancia optimizada para memoria (R5)  
+D) Instancia optimizada para almacenamiento (I3)
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+Instancias optimizadas para memoria (R5, X1) están diseñadas para cargas de trabajo que requieren grandes cantidades de RAM:
+
+- Análisis de big data en memoria
+- Bases de datos en memoria (Redis, SAP HANA)
+- Procesamiento de datos a gran escala
+- Aplicaciones de business intelligence
+
+Ejemplo: r5.16xlarge tiene 512 GiB de RAM
+
+</details>
+
+---
+
+#### Pregunta 9
+
+**Una empresa necesita procesar 10,000 imágenes. El trabajo puede interrumpirse y reanudarse sin problemas. ¿Qué opción de compra minimiza los costos?**
+
+A) On-Demand Instances  
+B) Reserved Instances  
+C) Spot Instances  
+D) Dedicated Instances
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+Spot Instances ofrecen hasta 90% de descuento y son perfectas para:
+
+- ✅ Trabajos por lotes (batch jobs)
+- ✅ Procesamiento de imágenes/videos
+- ✅ Análisis de datos
+- ✅ Cargas tolerantes a interrupciones
+- ✅ Trabajos con inicio/fin flexible
+
+**❌ NO usar Spot para:**
+- Bases de datos
+- Aplicaciones críticas
+- Servidores web de producción
+
+</details>
+
+---
+
+#### Pregunta 10
+
+**¿Qué sucede con la dirección IP pública de una instancia EC2 cuando se detiene y luego se reinicia?**
+
+A) Permanece igual  
+B) Cambia a una nueva dirección IP pública  
+C) Se pierde permanentemente  
+D) Se convierte en una IP privada
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+La dirección IP pública cambia cada vez que se detiene y reinicia una instancia.
+
+- IP privada: Permanece igual
+- IP pública: Cambia en cada stop/start
+- Elastic IP: Puede asignarse para mantener IP estática (pero tiene costo)
+
+⚠️ Importante: Esto puede afectar aplicaciones que dependen de la IP
+
+</details>
+
+---
+
+#### Pregunta 11 (Selección Múltiple)
+
+**¿Cuáles de las siguientes son características de los Security Groups? (Selecciona DOS)**
+
+A) Solo contienen reglas ALLOW (permitir)  
+B) Son stateless  
+C) Se aplican a nivel de subnet  
+D) Son stateful  
+E) Pueden aplicarse a múltiples instancias
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuestas correctas: A y D**
+
+**A) Solo contienen reglas ALLOW** ✅
+- No puedes crear reglas DENY explícitas
+- Todo está denegado por defecto
+
+**D) Son stateful** ✅
+- Si permites tráfico entrante, la respuesta se permite automáticamente
+- No necesitas regla de salida para respuestas
+
+**Incorrectas:**
+- B: Son stateful, no stateless (NACLs son stateless)
+- C: Se aplican a nivel de instancia/ENI, no subnet
+- E: Correcto, pero solo se pedían DOS respuestas
+
+</details>
+
+---
+
+#### Pregunta 12
+
+**Un desarrollador necesita conectarse remotamente a una instancia EC2 con Linux. ¿Qué puerto debe estar abierto en el Security Group?**
+
+A) Puerto 21 (FTP)  
+B) Puerto 22 (SSH)  
+C) Puerto 80 (HTTP)  
+D) Puerto 3389 (RDP)
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+Puerto 22 (SSH) se utiliza para conexiones remotas seguras a instancias Linux.
+
+- Puerto 22: SSH (Linux/Mac/Unix)
+- Puerto 3389: RDP (Windows)
+- Puerto 21: FTP (transferencia de archivos, inseguro)
+- Puerto 80: HTTP (web)
+
+</details>
+
+---
+
+#### Pregunta 13
+
+**¿Qué servicio permite conectarse a una instancia EC2 directamente desde el navegador sin necesidad de descargar claves SSH?**
+
+A) AWS Systems Manager Session Manager  
+B) EC2 Instance Connect  
+C) AWS CloudShell  
+D) AWS Management Console
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+EC2 Instance Connect permite:
+
+- Conexión desde el navegador
+- No requiere descargar claves SSH
+- Funciona en Amazon Linux 2 y Ubuntu
+- Requiere puerto 22 abierto en Security Group
+
+AWS Systems Manager Session Manager también funciona pero no requiere puerto 22 abierto.
+
+</details>
+
+---
+
+#### Pregunta 14
+
+**Una empresa necesita cumplir con regulaciones que requieren servidores físicos dedicados. ¿Qué opción de EC2 deben usar?**
+
+A) On-Demand Instances  
+B) Reserved Instances  
+C) Dedicated Hosts  
+D) Spot Instances
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+Dedicated Hosts proporcionan:
+
+- Servidor físico completo dedicado
+- Visibilidad de sockets, cores, host ID
+- Control de ubicación de instancias
+- Soporte para licencias BYOL (Bring Your Own License)
+- Cumplimiento de regulaciones estrictas
+
+Dedicated Instances también ofrecen aislamiento pero sin visibilidad ni control del hardware físico.
+
+</details>
+
+---
+
+#### Pregunta 15
+
+**¿Cuál de las siguientes afirmaciones sobre los datos de usuario (User Data) de EC2 es CORRECTA?**
+
+A) Se ejecutan cada vez que se reinicia la instancia  
+B) Se ejecutan con permisos de usuario limitados  
+C) Solo se ejecutan en el primer arranque de la instancia  
+D) Requieren instalación manual de software adicional
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+User Data se ejecuta solo en el primer arranque de la instancia.
+
+**Características:**
+- ✅ Solo primera ejecución
+- ✅ Con privilegios de root
+- ✅ Para bootstrap/configuración automática
+- ✅ No requiere software adicional
+
+**Ejemplo de uso:**
+
+```bash
+#!/bin/bash
+yum update -y
+yum install -y httpd
+systemctl start httpd
+```
+
+</details>
+
+---
+
+#### Pregunta 16
+
+**¿Qué herramienta de AWS ayuda a optimizar costos recomendando el tipo y tamaño de instancia más adecuado?**
+
+A) AWS Cost Explorer  
+B) AWS Trusted Advisor  
+C) AWS Compute Optimizer  
+D) AWS Budgets
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+**AWS Compute Optimizer** utiliza machine learning para:
+
+- Recomendar tipos de instancia óptimos
+- Analizar patrones de utilización
+- Sugerir ajustes de tamaño (right-sizing)
+- Ayudar a reducir costos hasta 25%
+
+**Otras herramientas:**
+- Cost Explorer: Visualiza y analiza costos
+- Trusted Advisor: Recomendaciones generales (incluye optimización)
+- Budgets: Alertas de presupuesto
+
+</details>
+
+---
+
+#### Pregunta 17 (Selección Múltiple)
+
+**¿Cuáles son componentes que puedes configurar al lanzar una instancia EC2? (Selecciona TRES)**
+
+A) AMI (Amazon Machine Image)  
+B) Tipo de instancia  
+C) Región de AWS  
+D) Security Group  
+E) Dominio DNS personalizado
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuestas correctas: A, B y D**
+
+Al lanzar una instancia EC2 configuras:
+
+**A) AMI** ✅
+- Sistema operativo
+- Software preinstalado
+- Configuración base
+
+**B) Tipo de instancia** ✅
+- CPU y RAM
+- Familia (t2, m5, c5, etc.)
+- Tamaño (micro, small, large, xlarge)
+
+**D) Security Group** ✅
+- Reglas de firewall
+- Puertos permitidos
+- Control de acceso
+
+**Incorrectas:**
+- C: La región se selecciona antes, no durante el launch
+- E: DNS se configura en Route 53, no en el launch de EC2
+
+</details>
+
+---
+
+#### Pregunta 18
+
+**Una aplicación necesita acceder a DynamoDB. ¿Cuál es la forma MÁS segura de proporcionar acceso desde una instancia EC2?**
+
+A) Crear un usuario IAM y ejecutar `aws configure` en la instancia  
+B) Hardcodear Access Keys en las variables de entorno  
+C) Crear un rol IAM con permisos de DynamoDB y asignarlo a la instancia  
+D) Usar las credenciales del usuario root
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+**Crear un rol IAM y asignarlo a la instancia** es la forma más segura:
+
+**Proceso:**
+1. Crear rol IAM con política DynamoDB
+2. Asignar rol a instancia EC2
+3. Aplicación usa credenciales temporales automáticamente
+
+**Ventajas:**
+- ✅ Sin credenciales expuestas
+- ✅ Rotación automática
+- ✅ Auditable con CloudTrail
+- ✅ Principio de mínimo privilegio
+
+**❌ Nunca:**
+- Usar `aws configure` en producción
+- Hardcodear credenciales
+- Usar credenciales root
+
+</details>
+
+---
+
+#### Pregunta 19
+
+**¿Qué característica diferencia a las Reserved Instances Convertibles de las Standard Reserved Instances?**
+
+A) Mayor descuento  
+B) Posibilidad de cambiar el tipo de instancia durante el periodo reservado  
+C) No requieren compromiso de tiempo  
+D) Pueden interrumpirse por AWS
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: B**
+
+**Convertible Reserved Instances** permiten:
+
+- ✅ Cambiar tipo de instancia
+- ✅ Cambiar sistema operativo
+- ✅ Cambiar tenancy (default/dedicated)
+- ✅ Cambiar familia de instancias
+
+**Comparación:**
+
+| Aspecto | Standard | Convertible |
+|---------|----------|-------------|
+| Descuento | Hasta 72% | Hasta 66% |
+| Flexibilidad | Baja | Alta |
+| Cambio de tipo | ❌ No | ✅ Sí |
+| Precio | Más barato | Más caro |
+
+</details>
+
+---
+
+#### Pregunta 20
+
+**Una empresa tiene cargas de trabajo base constantes y picos impredecibles. ¿Cuál es la estrategia de compra MÁS rentable?**
+
+A) Solo On-Demand Instances  
+B) Solo Spot Instances  
+C) Reserved Instances para la base + On-Demand para picos  
+D) Solo Reserved Instances
+
+<details>
+<summary>Ver respuesta</summary>
+
+**Respuesta correcta: C**
+
+**Estrategia mixta** es la más rentable:
+
+```
+Arquitectura recomendada:
+
+├── Carga base (70%) → Reserved Instances
+│   └── Ahorro: 60-72%
+│
+├── Carga predecible (20%) → Savings Plans
+│   └── Ahorro: 40-50%
+│
+└── Picos (10%) → On-Demand + Spot
+    └── Flexibilidad total
+```
+
+**Ejemplo:**
+- Base: 10 instancias 24/7 → Reserved
+- Picos: 0-5 instancias variables → On-Demand
+- Ahorro total: ~50-60% vs todo On-Demand
+
+Esta estrategia optimiza costo y flexibilidad.
+
+</details>
+
+---
+
+## Resultados
+
+**Puntuación para aprobar**: 14/20 (70%)
+
+### Evaluación por categorías:
+
+**Fundamentos de EC2** (Preguntas 1, 5, 10, 15)
+- Conceptos básicos
+- User Data
+- Comportamiento de IPs
+
+**Seguridad** (Preguntas 3, 4, 7, 12, 18)
+- Responsabilidad compartida
+- Security Groups
+- Roles IAM
+- Puertos
+
+**Opciones de Compra** (Preguntas 2, 6, 9, 14, 19, 20)
+- On-Demand, Reserved, Spot, Dedicated
+- Estrategias de optimización
+- Casos de uso
+
+**Tipos y Configuración** (Preguntas 8, 11, 13, 16, 17)
+- Tipos de instancias
+- Herramientas de optimización
+- Componentes de configuración
+
+---
+
+## Análisis de Errores Comunes
+
+### Error #1: Confundir responsabilidades compartidas
+
+```
+❌ Pensar que AWS actualiza el SO
+✅ El cliente debe parchear el SO invitado
+
+Recordar:
+- AWS → Seguridad DEL cloud (infraestructura)
+- Cliente → Seguridad EN el cloud (datos, SO, apps)
+```
+
+### Error #2: No entender Security Groups
+
+```
+❌ Pensar que son stateless
+✅ Son stateful (respuestas automáticas)
+
+❌ Crear reglas DENY
+✅ Solo reglas ALLOW (deny por defecto)
+```
+
+### Error #3: Confundir opciones de compra
+
+```
+❌ Usar Reserved para cargas impredecibles
+✅ Reserved para cargas estables
+
+❌ Usar Spot para bases de datos
+✅ Spot para trabajos por lotes tolerantes a fallos
+```
+
+### Error #4: Mal uso de credenciales
+
+```
+❌ Usar aws configure en instancias
+✅ Asignar roles IAM
+
+❌ Hardcodear Access Keys
+✅ Usar credenciales temporales vía roles
+```
+
+---
+
+## Recursos para Mejorar
+
+### Si obtuviste menos de 14/20:
+
+- Repasar sección de Fundamentos de EC2
+- Practicar lanzamiento de instancias
+- Experimentar con Security Groups
+- Estudiar modelo de responsabilidad compartida
+
+### Si obtuviste 14-17/20:
+
+- Profundizar en opciones de compra
+- Practicar asignación de roles IAM
+- Estudiar estrategias de optimización de costos
+- Revisar casos de uso de cada tipo de instancia
+
+### Si obtuviste 18-20/20:
+
+¡Excelente! Estás listo para esta sección del examen.
+
+- Revisar otros módulos del curso
+- Hacer exámenes prácticos completos
+- Enfocarte en otros servicios de AWS
+
+---
+
+## Próximos Pasos
+
+- ✅ Completado: Amazon EC2
+
+**Continúa con:**
+
+- 📦 Almacenamiento de instancias EC2 (EBS, EFS, Instance Store)
+- ⚖️ Elastic Load Balancing y Auto Scaling Groups
+- 🗄️ Amazon S3
+
+---
+
+## ¿Listo para el siguiente módulo?
+
+Continúa tu preparación con el módulo de **Almacenamiento EC2** donde aprenderás sobre:
+
+- EBS (Elastic Block Store)
+- Snapshots
+- AMIs (Amazon Machine Images)
+- EFS (Elastic File System)
+- EC2 Instance Store
+
+¡Sigue así! 🚀
+
+---
+
+**Última actualización**: Octubre 2024  
+**Versión**: 1.0  
+**Autor**: Basado en el curso AWS Certified Cloud Practitioner
