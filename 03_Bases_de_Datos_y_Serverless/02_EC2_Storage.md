@@ -1,1259 +1,689 @@
+# Almacenamiento de Instancias EC2
+
 ## 1. Visión General de EBS (Elastic Block Store)
+
+Amazon EBS (Elastic Block Store) es un servicio de almacenamiento en bloque de alto rendimiento diseñado para usarse con Amazon EC2. Proporciona volúmenes de almacenamiento persistentes que se comportan como discos duros virtuales.
+
+### ¿Qué es un Volumen EBS?
+
+Un volumen EBS es una unidad de red (no es una unidad física) que puedes adjuntar a tus instancias mientras se ejecutan. Esto te permite:
+
+- ✅ Persistir datos incluso después de terminar la instancia
+- ✅ Montar en una instancia a la vez (a nivel CCP - Cloud Practitioner)
+- ✅ Vincularlo a una zona de disponibilidad específica
+
+**Analogía:** Piensa en EBS como una "memoria USB de red" que puedes conectar y desconectar de tus servidores virtuales.
+
+### Características Principales
+
+| Característica | Descripción |
+|---|---|
+| **Persistente** | Los datos se conservan después de detener o terminar la instancia |
+| **Nivel de Bloque** | Proporciona almacenamiento a nivel de bloque, como un disco duro tradicional |
+| **Escalable** | Se puede aumentar la capacidad y rendimiento sin reiniciar la instancia |
+| **Alta Disponibilidad** | Replicado automáticamente dentro de la misma zona de disponibilidad |
+| **Cifrado** | Opción de cifrado con AWS KMS al crear el volumen |
+| **Facturación** | Pagas por toda la capacidad aprovisionada (no solo por lo que usas) |
+
+### ¿Cómo Funciona?
+
 ```
-Amazon EBS (Elastic Block Store) es un servicio de almacenamiento en bloque de alto rendimiento diseñado para su uso con Amazon EC2. Proporciona volúmenes de almacenamiento persistentes que pueden adjuntarse a instancias EC2.
-¿Qué es un Volumen EBS?
-Un volumen EBS es una unidad de red (no un disco físico) que puedes adjuntar a tus instancias mientras se ejecutan. Esto permite que tus datos persistan incluso después de que la instancia se detenga o termine.
-Características Principales
-CaracterísticaDescripciónPersistenteLos datos se conservan después de detener o terminar la instanciaNivel de BloqueProporciona almacenamiento a nivel de bloque, similar a un disco duro tradicionalEscalablePuedes aumentar la capacidad y rendimiento sin reiniciar la instanciaVinculado a una AZCada volumen está bloqueado en una Zona de Disponibilidad específicaAlta DisponibilidadReplicado automáticamente dentro de la misma zona de disponibilidadCifradoOpción de cifrado con AWS KMS al crear el volumenSnapshotsPermite crear copias de seguridad (almacenadas en S3)
-Características de Red
-
-Latencia: Al ser una unidad de red, puede haber algo de latencia en comparación con el almacenamiento físico
-Separable: Se puede desconectar de una instancia EC2 y reconectarse a otra rápidamente
-Una instancia a la vez: Por defecto, un volumen EBS solo puede montarse en una instancia a la vez (excepto con Multi-Attach)
-
-Tipos de Volúmenes EBS
-SSD (Solid State Drives)
-TipoNombreCaracterísticasUso Idealgp3SSD de propósito general (última generación)• 3,000-16,000 IOPS<br>• 125-1,000 MB/s throughput<br>• Precio más económico que gp2Aplicaciones de propósito general, entornos de desarrollogp2SSD de propósito general• 3-16,000 IOPS<br>• Relación entre IOPS y tamaño<br>• 3 IOPS por GBVolúmenes de arranque, aplicaciones pequeñas y medianasio2 Block ExpressSSD de alto rendimiento (última generación)• Hasta 256,000 IOPS<br>• 99.999% durabilidad<br>• Relación 1000:1 IOPS:GBAplicaciones críticas de misiónio1SSD de alto rendimiento• 64,000 IOPS máximo<br>• 50 IOPS por GB<br>• 99.9% durabilidadBases de datos críticas, aplicaciones que requieren IOPS sostenidas
-HDD (Hard Disk Drives)
-TipoNombreCaracterísticasUso Idealst1HDD optimizado para throughput• 500 IOPS máximo<br>• 500 MB/s throughput máximo<br>• No puede ser volumen de arranqueBig Data, data warehouses, procesamiento de logssc1HDD de bajo costo• 250 IOPS máximo<br>• 250 MB/s throughput máximo<br>• No puede ser volumen de arranqueDatos de acceso poco frecuente, escenarios donde el menor costo es importante
-Capacidad Provisionada
-
-Debes provisionar la capacidad de antemano (tamaño en GBs e IOPS)
-Se te facturará por toda la capacidad provisionada
-Puedes aumentar la capacidad del volumen con el tiempo
-
-Atributo "Delete on Termination"
-┌─────────────────────────────────────────────────┐
-│ Instancia EC2                                   │
-│                                                 │
-│  ┌──────────────┐         ┌──────────────┐    │
-│  │ Volumen Root │         │ Volumen EBS  │    │
-│  │   (Delete:   │         │  adicional   │    │
-│  │   ✓ Enabled) │         │   (Delete:   │    │
-│  │              │         │   ✗ Disabled)│    │
-│  └──────────────┘         └──────────────┘    │
-│         │                        │             │
-│         ▼                        ▼             │
-│   Se elimina al               Persiste         │
-│   terminar instancia          después          │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────┐
+│   Zona Disponibilidad       │
+│        us-east-1a           │
+│                             │
+│  ┌────────────────┐         │
+│  │  EC2 Instance  │ ──┐     │
+│  │                │  │     │
+│  └────────────────┘  │ Adjunto
+│                      │     │
+│        ┌──────────┐  │     │
+│        │EBS 10 GB │←─┘     │
+│        └──────────┘  │     │
+│                      │     │
+│  ┌────────────────┐  │     │
+│  │  EC2 Instance  │  │     │
+│  │                │  │     │
+│  └────────────────┘  │     │
+│                      │No adjunto
+│        ┌──────────┐  │     │
+│        │EBS 50 GB │  │     │
+│        └──────────┘  │     │
+│                      │     │
+└─────────────────────────────┘
 ```
 
-- **Por defecto**: 
-  - El volumen raíz (root) se **elimina** cuando se termina la instancia (✓ habilitado)
-  - Cualquier otro volumen EBS adjunto **NO se elimina** (✗ deshabilitado)
-- Este comportamiento puede controlarse desde la consola de AWS o AWS CLI
-- **Caso de uso**: Preservar el volumen root cuando se termina la instancia (desmarcar "Delete on termination")
+### Tipos de Volúmenes EBS
+
+AWS ofrece diferentes tipos de volúmenes EBS optimizados para distintos casos de uso:
+
+#### SSD de Propósito General (gp3/gp2)
+
+- **Uso:** Equilibrio entre precio y rendimiento
+- **IOPS:** hasta 16,000
+- **Casos de uso:** Volúmenes de arranque, desarrollo/pruebas, aplicaciones de bajo rendimiento
+
+#### SSD de IOPS Provisionadas (io2/io1)
+
+- **Uso:** Alto rendimiento para cargas críticas
+- **IOPS:** hasta 64,000 (io2) o 64,000 (io1)
+- **Casos de uso:** Bases de datos críticas, aplicaciones que requieren IOPS sostenidas
+
+#### HDD Optimizado para Throughput (st1)
+
+- **Uso:** Alto throughput a bajo costo
+- **Throughput:** hasta 500 MB/s
+- **Casos de uso:** Big Data, data warehouses, procesamiento de logs
+
+#### HDD Cold (sc1)
+
+- **Uso:** Almacenamiento de bajo costo
+- **Throughput:** hasta 250 MB/s
+- **Casos de uso:** Datos a los que se accede con poca frecuencia
+
+### Atributo "Delete on Termination" (Borrar al Terminar)
+
+Por defecto:
+
+- ✅ El volumen **root** (raíz) se **elimina** cuando terminas la instancia
+- ❌ Los volúmenes **adicionales** **NO se eliminan** cuando terminas la instancia
+
+Puedes cambiar este comportamiento en la configuración de la instancia.
+
+### Nivel Gratuito (Free Tier)
+
+AWS ofrece **30 GB** de almacenamiento EBS gratuito al mes (tipo gp2 o Magnetic) durante 12 meses.
 
 ### Casos de Uso Típicos
 
-- Bases de datos relacionales y NoSQL
-- Sistemas de archivos empresariales
-- Aplicaciones de misión crítica
-- Almacenamiento persistente de logs
-- Volúmenes de arranque para instancias EC2
-
-### Diagrama de Arquitectura
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Región: us-east-1                                          │
-│                                                             │
-│  ┌────────────────────────────────┐  ┌──────────────────┐ │
-│  │ us-east-1a                     │  │ us-east-1b       │ │
-│  │                                │  │                  │ │
-│  │  ┌──────────┐   ┌──────────┐  │  │  ┌──────────┐   │ │
-│  │  │ Instancia│───│   EBS    │  │  │  │ Instancia│   │ │
-│  │  │   EC2    │   │ 100 GB   │  │  │  │   EC2    │   │ │
-│  │  └──────────┘   └──────────┘  │  │  └──────────┘   │ │
-│  │                                │  │       │         │ │
-│  │  ┌──────────┐                 │  │  ┌────▼─────┐   │ │
-│  │  │   EBS    │ (No adjunto)    │  │  │   EBS    │   │ │
-│  │  │  10 GB   │                 │  │  │  50 GB   │   │ │
-│  │  └──────────┘                 │  │  └──────────┘   │ │
-│  └────────────────────────────────┘  └──────────────────┘ │
-│                                                             │
-│  ⚠️  Un volumen EBS en us-east-1a NO puede adjuntarse      │
-│      a una instancia en us-east-1b                         │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Facturación
-
-- Se factura por:
-  - GB provisionados por mes
-  - IOPS provisionadas (para volúmenes io1/io2)
-  - Throughput provisionado (para volúmenes gp3)
-  - Snapshots almacenados en S3
+- 📁 Bases de datos (MySQL, PostgreSQL, Oracle)
+- 📂 Sistemas de archivos persistentes
+- 📊 Aplicaciones de misión crítica
+- 📝 Almacenamiento de logs del sistema
+- 💾 Volúmenes de arranque (boot) para instancias EC2
 
 ---
 
 ## 2. Acerca de EBS Multi-Attach
 
-**EBS Multi-Attach** es una característica que permite conectar un mismo volumen EBS a múltiples instancias EC2 **dentro de la misma zona de disponibilidad**.
+**EBS Multi-Attach** es una característica que permite adjuntar un mismo volumen EBS a **múltiples instancias EC2** al mismo tiempo dentro de la **misma zona de disponibilidad**.
 
-### Características Principales
-```
-┌──────────────────────────────────────────────────────┐
-│  Zona de Disponibilidad: us-east-1a                  │
-│                                                       │
-│  ┌─────────────┐                                     │
-│  │ Instancia 1 │──┐                                  │
-│  └─────────────┘  │                                  │
-│                   │    ┌─────────────────┐           │
-│  ┌─────────────┐  ├────│  Volumen EBS    │           │
-│  │ Instancia 2 │──┤    │  Multi-Attach   │           │
-│  └─────────────┘  │    │    (io1/io2)    │           │
-│                   │    └─────────────────┘           │
-│  ┌─────────────┐  │                                  │
-│  │ Instancia 3 │──┘                                  │
-│  └─────────────┘                                     │
-│                                                       │
-│  Hasta 16 instancias EC2 conectadas simultáneamente  │
-└──────────────────────────────────────────────────────┘
-```
-
-### Requisitos
+### Requisitos y Limitaciones
 
 | Requisito | Detalle |
-|-----------|---------|
-| **Tipos de volumen** | Solo disponible para volúmenes **io1** e **io2** (Provisioned IOPS SSD) |
-| **Ubicación** | Todas las instancias deben estar en la **misma Zona de Disponibilidad** |
-| **Sistema de archivos** | Debe usar un sistema de archivos compatible con clústeres |
-| **Límite de instancias** | Hasta **16 instancias EC2** por volumen |
+|---|---|
+| **Tipo de Volumen** | Solo disponible para volúmenes **io1** e **io2** (IOPS provisionadas) |
+| **Zona de Disponibilidad** | Todas las instancias deben estar en la **misma AZ** |
+| **Sistema de Archivos** | Requiere un sistema de archivos compatible con acceso concurrente |
+| **Número de Instancias** | Hasta 16 instancias Linux EC2 por volumen |
+
+### Arquitectura de EBS Multi-Attach
+
+```
+┌──────────────────────────────────────┐
+│  Zona de Disponibilidad us-east-1a   │
+│                                      │
+│  ┌──────────────────┐                │
+│  │ Instance 1       │                │
+│  └────────┬─────────┘                │
+│           │                          │
+│  ┌────────┴──────────┐   ┌────────┐ │
+│  │ Instance 2       │───┤EBS Vol │ │
+│  └────────┬──────────┘   │ io2    │ │
+│           │              │Multi   │ │
+│  ┌────────┴──────────┐   │Attach  │ │
+│  │ Instance 3       │───┤        │ │
+│  └──────────────────┘   └────────┘ │
+│                                      │
+└──────────────────────────────────────┘
+```
 
 ### Sistemas de Archivos Compatibles
 
-Para acceso concurrente, necesitas sistemas de archivos de clúster como:
+Para usar EBS Multi-Attach necesitas un **sistema de archivos cluster** como:
 
-- **XFS** (con gestión externa de acceso concurrente)
-- **ext4** (con gestión externa de acceso concurrente)
 - **GFS2** (Global File System 2)
-- **OCFS2** (Oracle Cluster File System 2)
+- **Lustre**
+- **OCFS2** (Oracle Cluster File System)
 
-> ⚠️ **Advertencia**: Los sistemas de archivos estándar como ext4 o XFS sin configuración especial NO son seguros para acceso concurrente de escritura.
+⚠️ **Nota importante:** Los sistemas de archivos estándar como ext4, XFS o NTFS **NO** soportan escrituras concurrentes y causarán corrupción de datos.
 
 ### Casos de Uso
 
-1. **Aplicaciones de clúster** que requieren acceso concurrente a datos
-2. **Bases de datos en clúster** (con software que soporte escrituras concurrentes)
-3. **Aplicaciones que requieren alta disponibilidad** de aplicaciones
+- 🏢 **Aplicaciones cluster** que requieren acceso compartido
+- 📊 **Bases de datos cluster** como Oracle RAC
+- 📄 **Alta disponibilidad** de aplicaciones que requieren failover rápido
+- 📈 **Aplicaciones que requieren mayor disponibilidad** en una única AZ
 
-### Limitaciones
+### ⚠️ Importante para el Examen
 
-- No funciona con todos los tipos de volúmenes (solo io1/io2)
-- Limitado a una zona de disponibilidad
-- Requiere que la aplicación gestione la escritura concurrente
-- No está disponible en todas las regiones
-
-> ⚠️ **Nota para el examen**: Esta característica **no es parte del examen Cloud Practitioner**, pero es importante conocerla para roles más avanzados y certificaciones de nivel Associate o Professional.
-
-### Comparación: EBS Estándar vs Multi-Attach
-
-| Característica | EBS Estándar | EBS Multi-Attach |
-|----------------|--------------|------------------|
-| Instancias conectadas | 1 | Hasta 16 |
-| Tipos de volumen | Todos | Solo io1/io2 |
-| Zona de disponibilidad | Una AZ | Mismo requisito (una AZ) |
-| Sistema de archivos | Cualquiera | Cluster-aware necesario |
-| Caso de uso | General | Aplicaciones en clúster |
+Esta característica **NO es parte del examen Cloud Practitioner**, pero es útil conocerla para roles más avanzados (Solutions Architect, SysOps Administrator).
 
 ---
 
 ## 3. EBS - Práctica
 
-En esta sección aprenderás a crear y gestionar volúmenes EBS a través de la consola de AWS.
+En esta sección aprenderás a crear y administrar volúmenes EBS desde la consola de AWS.
 
-### Objetivos de la Práctica
+### Paso 1: Acceder a la Consola de EBS
 
-- Crear un volumen EBS
-- Adjuntar un volumen a una instancia EC2
-- Verificar el volumen desde la instancia
-- Entender el atributo "Delete on Termination"
+1. Inicia sesión en la **Consola de AWS**
+2. Navega a: **EC2 > Elastic Block Store > Volúmenes**
+3. Observa los volúmenes existentes (incluido el volumen root de tus instancias)
 
-### Pasos Detallados
+### Paso 2: Crear un Nuevo Volumen EBS
 
-#### Paso 1: Acceder a la Consola de EBS
+1. Click en "Crear Volumen" (Create Volume)
+2. Configurar los parámetros:
+
 ```
-1. Inicia sesión en la Consola de AWS
-2. Navega a: EC2 > Elastic Block Store > Volumes
-   
-   O busca "EBS" en la barra de búsqueda superior
-```
-
-#### Paso 2: Crear un Nuevo Volumen
-```
-1. Click en "Create Volume" (Crear volumen)
-
-2. Configurar las propiedades:
-   
-   ┌────────────────────────────────────────────┐
-   │ Volume Settings                            │
-   ├────────────────────────────────────────────┤
-   │ Volume Type:        [gp3 ▼]               │
-   │ Size (GiB):         [2]                    │
-   │ IOPS:               [3000] (automático)    │
-   │ Throughput (MB/s):  [125]  (automático)    │
-   │ Availability Zone:  [us-east-1a ▼]        │
-   │ Snapshot ID:        (Opcional)             │
-   │                                            │
-   │ Encryption:         [☐] Encrypt this      │
-   │                          volume            │
-   │                                            │
-   │ Tags:               Key: Name              │
-   │                     Value: Mi-Volumen-EBS  │
-   └────────────────────────────────────────────┘
-
-3. Click en "Create Volume"
+Tipo de Volumen: gp3
+Tamaño: 2 GiB
+IOPS: 3000 (predeterminado)
+Throughput: 125 MB/s
+Zona de Disponibilidad: us-east-1a (misma que EC2)
+Cifrado: Deshabilitado
+Tags:
+  Nombre: demo-volume
 ```
 
-#### Paso 3: Detalles de Configuración
+3. Click en "Crear Volumen" (Create Volume)
 
-| Campo | Descripción | Recomendación |
-|-------|-------------|---------------|
-| **Volume Type** | Tipo de volumen EBS | `gp3` para propósito general (mejor precio-rendimiento) |
-| **Size** | Tamaño en GiB | `2 GiB` para pruebas (dentro de free tier) |
-| **Availability Zone** | Zona de disponibilidad | Debe ser la **misma AZ** que tu instancia EC2 |
-| **Snapshot ID** | Para crear desde snapshot | Dejar vacío para volumen nuevo |
-| **Encryption** | Cifrar el volumen | Recomendado para datos sensibles |
+### Paso 3: Adjuntar el Volumen a una Instancia EC2
 
-#### Paso 4: Adjuntar el Volumen a una Instancia EC2
+Una vez creado el volumen:
+
+1. Selecciona el volumen creado
+2. Click en "Acciones" > "Asociar Volumen" (Attach Volume)
+3. Configurar:
+
 ```
-1. Una vez creado el volumen, selecciónalo en la lista
-
-2. Click en "Actions" > "Attach Volume"
-
-3. Configurar el adjunto:
-   
-   ┌────────────────────────────────────────────┐
-   │ Attach Volume                              │
-   ├────────────────────────────────────────────┤
-   │ Instance:     [i-1234567890abcdef0 ▼]     │
-   │               (my-ec2-instance)            │
-   │                                            │
-   │ Device name:  [/dev/sdf ▼]                │
-   │               (sugerido por AWS)           │
-   │                                            │
-   │ ⓘ El nombre del dispositivo puede variar  │
-   │   dentro del sistema operativo             │
-   └────────────────────────────────────────────┘
-
-4. Click en "Attach Volume"
-
-5. Verifica el estado: debe cambiar a "in-use"
+Instancia: Selecciona tu EC2
+Dispositivo: /dev/sdf
+(AWS lo ajustará automáticamente si es necesario)
 ```
 
-#### Paso 5: Verificar desde la Instancia EC2
+4. Click en "Asociar" (Attach)
 
-Una vez adjunto el volumen, verifica desde la consola de EC2:
-```
-1. Navega a: EC2 > Instances
-2. Selecciona tu instancia
-3. Tab: "Storage" o "Almacenamiento"
-4. Deberías ver:
-   
-   ┌────────────────────────────────────────────┐
-   │ Block devices                              │
-   ├─────────────────┬──────────────────────────┤
-   │ Device name     │ Volume ID                │
-   ├─────────────────┼──────────────────────────┤
-   │ /dev/xvda       │ vol-0abc123def (Root)   │
-   │ /dev/sdf        │ vol-0xyz789ghi (EBS)    │
-   └─────────────────┴──────────────────────────┘
-Paso 6: Formatear y Montar el Volumen (Opcional - Avanzado)
-Si deseas usar el volumen, conéctate por SSH a la instancia:
-bash# 1. Verificar los dispositivos disponibles
+### Paso 4: Verificar desde la Instancia EC2
+
+Conéctate a tu instancia y verifica:
+
+```bash
+# Listar todos los dispositivos de bloque
 lsblk
 
 # Salida esperada:
 # NAME    MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
-# xvda    202:0    0   8G  0 disk 
+# xvda    202:0    0   8G  0 disk
 # └─xvda1 202:1    0   8G  0 part /
-# xvdf    202:80   0   2G  0 disk    ← Nuestro nuevo volumen
+# xvdf    202:80   0   2G  0 disk  # <- Tu nuevo volumen
+```
 
-# 2. Verificar si tiene sistema de archivos
+### Paso 5: Formatear y Montar el Volumen (Opcional)
+
+```bash
+# 1. Verificar que el volumen no tiene sistema de archivos
 sudo file -s /dev/xvdf
 
-# Si devuelve "data", está vacío y necesita formato
-
-# 3. Crear sistema de archivos (⚠️ SOLO para volúmenes nuevos)
+# 2. Crear sistema de archivos ext4
 sudo mkfs -t ext4 /dev/xvdf
 
-# 4. Crear punto de montaje
+# 3. Crear punto de montaje
 sudo mkdir /data
 
-# 5. Montar el volumen
+# 4. Montar el volumen
 sudo mount /dev/xvdf /data
 
-# 6. Verificar que está montado
+# 5. Verificar que está montado
 df -h
 
-# 7. (Opcional) Montaje automático al reiniciar
-# Editar /etc/fstab
-sudo cp /etc/fstab /etc/fstab.backup
-echo '/dev/xvdf /data ext4 defaults,nofail 0 2' | sudo tee -a /etc/fstab
+# 6. Para montaje permanente, editar /etc/fstab
+sudo nano /etc/fstab
+# Agregar: /dev/xvdf  /data  ext4  defaults,nofail  0  2
 ```
 
-#### Paso 7: Gestionar el Atributo "Delete on Termination"
-```
-1. Selecciona tu instancia EC2
-2. Tab: "Storage"
-3. Click en el ID del volumen
-4. Actions > Modify attribute
+### Paso 6: Desadjuntar un Volumen
 
-   O desde el lanzamiento de la instancia:
-   
-   ┌────────────────────────────────────────────┐
-   │ Configure storage                          │
-   ├────────────────────────────────────────────┤
-   │ Volume 1 (Root)                            │
-   │ Size:                  8 GiB               │
-   │ Volume Type:           gp3                 │
-   │ [☑] Delete on Termination  ← AQUÍ        │
-   │                                            │
-   │ Volume 2 (Additional)                      │
-   │ Size:                  2 GiB               │
-   │ Volume Type:           gp3                 │
-   │ [☐] Delete on Termination  ← AQUÍ        │
-   └────────────────────────────────────────────┘
-```
+Para desadjuntar un volumen:
 
-### Notas Importantes
-
-| ⚠️ Advertencia | Descripción |
-|---------------|-------------|
-| **Zona de Disponibilidad** | El volumen debe estar en la **misma AZ** que la instancia |
-| **Volumen Root** | Por defecto se elimina al terminar la instancia (a menos que se deshabilite) |
-| **Facturación** | Se te cobra por el almacenamiento provisionado, incluso si no está adjunto a ninguna instancia |
-| **Snapshots antes de cambios** | Siempre crea un snapshot antes de modificar volúmenes en producción |
-
-### Mejores Prácticas
-
-✅ **Hacer**:
-- Etiquetar volúmenes con nombres descriptivos
-- Crear snapshots regulares de volúmenes importantes
-- Monitorear el uso del volumen con CloudWatch
-- Cifrar volúmenes que contengan datos sensibles
-
-❌ **Evitar**:
-- Dejar volúmenes no adjuntos (siguen costando dinero)
-- Eliminar volúmenes sin hacer snapshot de los datos importantes
-- Usar volúmenes más grandes de lo necesario
-
-### Limpieza de Recursos
-
-Para evitar cargos innecesarios:
-```
-1. Desmontar el volumen desde la instancia (si está montado)
+1. Desde la instancia EC2, desmontar primero:
+   ```bash
    sudo umount /data
+   ```
 
-2. Desadjuntar el volumen:
-   EC2 > Volumes > Seleccionar volumen
-   Actions > Detach Volume
+2. En la Consola de AWS:
+   - Selecciona el volumen
+   - Click en "Acciones" > "Desasociar Volumen"
+   - Confirmar la operación
 
-3. Eliminar el volumen:
-   Actions > Delete Volume
-   
-   ⚠️ Esta acción es irreversible. Crea un snapshot si necesitas
-      conservar los datos.
+⚠️ **IMPORTANTE:** Siempre desmonta primero desde el SO antes de desadjuntar desde la consola
+
+### Paso 7: Modificar un Volumen Existente
+
+Puedes modificar un volumen sin detener la instancia:
+
+1. Selecciona el volumen
+2. Click en "Acciones" > "Modificar Volumen"
+3. Puedes cambiar:
+   - ✓ Tipo de volumen (gp2 → gp3)
+   - ✓ Tamaño (2 GB → 10 GB)
+   - ✓ IOPS (solo io1/io2/gp3)
+   - ✓ Throughput (solo gp3)
+
+4. Click en "Modificar"
+
+Después de modificar el tamaño, necesitas extender el sistema de archivos:
+
+```bash
+# Para ext4
+sudo resize2fs /dev/xvdf
+
+# Para XFS
+sudo xfs_growfs -d /data
 ```
+
+### 🎯 Ejercicio Práctico
+
+Completa los siguientes pasos:
+
+1. ✅ Crea un volumen EBS de 5 GB tipo gp3
+2. ✅ Adjúntalo a una instancia EC2 activa
+3. ✅ Conéctate por SSH y verifica con `lsblk`
+4. ✅ Formatea el volumen con ext4
+5. ✅ Móntalo en `/datos`
+6. ✅ Crea un archivo de prueba: `echo "Hola EBS" > /datos/prueba.txt`
+7. ✅ Verifica que el archivo persiste después de reiniciar la instancia
+
+### ⚠️ Notas Importantes
+
+| Concepto | Detalle |
+|---|---|
+| **Volumen Root** | Se elimina por defecto al terminar la instancia (puedes cambiar esto) |
+| **Volúmenes Adicionales** | NO se eliminan por defecto al terminar la instancia |
+| **Zona de Disponibilidad** | Un volumen solo puede adjuntarse a instancias en la misma AZ |
+| **Snapshots** | Usa snapshots para mover volúmenes entre AZs o regiones |
 
 ---
 
 ## 4. Visión General de EBS Snapshots
 
-Un **EBS Snapshot** es una copia de seguridad incremental de un volumen EBS en un momento específico en el tiempo. Los snapshots se almacenan en Amazon S3 (administrado automáticamente por AWS).
+Un **Snapshot de EBS** es una copia de seguridad puntual (point-in-time) de un volumen EBS. Los snapshots son **incrementales**, lo que significa que solo se guardan los bloques que han cambiado desde el último snapshot.
 
-### ¿Qué es un Snapshot?
+### ¿Qué son los Snapshots?
+
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Línea de Tiempo del Volumen EBS                        │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  Volumen EBS (100 GB)                                   │
-│  ┌──────────┬──────────┬──────────┬──────────┐         │
-│  │ Día 1    │ Día 2    │ Día 3    │ Día 4    │         │
-│  │ 10GB     │ +5GB     │ +3GB     │ +2GB     │         │
-│  └────┬─────┴──────────┴────┬─────┴────┬─────┘         │
-│       │                     │          │                │
-│       ▼                     ▼          ▼                │
-│  Snapshot 1            Snapshot 2  Snapshot 3           │
-│  (10 GB)               (+5 GB)     (+2 GB)              │
-│  Completo              Incremental Incremental          │
-│                                                          │
-│  Almacenado en Amazon S3 (gestionado por AWS)          │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────┐
+│         Línea de Tiempo          │
+├─────────────────────────────────┤
+│                                 │
+│  Día 1: Volumen EBS (10 GB)     │
+│         ↓                        │
+│    [Snapshot 1: 10 GB]          │
+│                                 │
+│  Día 2: Cambios (+ 2 GB nuevos) │
+│         ↓                        │
+│    [Snapshot 2: +2 GB] ← Inc.   │
+│                                 │
+│  Día 3: Cambios (+ 1 GB nuevos) │
+│         ↓                        │
+│    [Snapshot 3: +1 GB] ← Inc.   │
+│                                 │
+└─────────────────────────────────┘
+
+Total almacenado: 13 GB (no 30 GB)
 ```
 
 ### Características Principales
 
 | Característica | Descripción |
-|----------------|-------------|
-| **Incremental** | Solo se guardan los bloques que han cambiado desde el último snapshot |
-| **Point-in-time** | Captura el estado del volumen en un momento específico |
-| **Almacenamiento** | Se almacenan en Amazon S3 (transparente para el usuario) |
-| **Regional** | Los snapshots son regionales, pero pueden copiarse entre regiones |
-| **Restauración** | Puedes crear nuevos volúmenes EBS desde snapshots |
-| **No requiere detener** | No necesitas detener la instancia, pero se recomienda para consistencia |
+|---|---|
+| **Incremental** | Solo guarda los bloques modificados desde el último snapshot |
+| **Almacenamiento** | Se almacenan en Amazon S3 (gestionado automáticamente por AWS) |
+| **Región** | Puede copiarse a otras regiones |
+| **Zona de Disponibilidad** | Puede restaurarse en cualquier AZ dentro de la región |
+| **Cifrado** | Los snapshots de volúmenes cifrados están automáticamente cifrados |
 
 ### Beneficios de los Snapshots
 
-#### 1. Copia de Seguridad y Recuperación
-```
-Volumen EBS Original
-       │
-       │ snapshot
-       ▼
-   Snapshot
-       │
-       │ restore
-       ▼
- Nuevo Volumen EBS
- (en la misma AZ o diferente)
-```
+✅ **Backup y Recuperación**
+- Protección contra pérdida de datos
+- Restauración rápida de volúmenes
 
-#### 2. Migración entre Zonas de Disponibilidad
-```
-┌──────────────────────────────────────────────────────┐
-│  Región: us-east-1                                   │
-│                                                       │
-│  ┌─────────────────┐         ┌─────────────────┐   │
-│  │  us-east-1a     │         │  us-east-1b     │   │
-│  │                 │         │                 │   │
-│  │  ┌───────────┐  │         │  ┌───────────┐  │   │
-│  │  │ Volumen   │  │         │  │  Nuevo    │  │   │
-│  │  │ EBS       │  │         │  │  Volumen  │  │   │
-│  │  │ Original  │  │         │  │  EBS      │  │   │
-│  │  └─────┬─────┘  │         │  └─────▲─────┘  │   │
-│  └────────┼────────┘         └────────┼────────┘   │
-│           │                           │             │
-│           │  ┌─────────────────┐     │             │
-│           └──│   Snapshot      │─────┘             │
-│              │ (S3 - Regional) │                   │
-│              └─────────────────┘                   │
-└──────────────────────────────────────────────────────┘
-```
+✅ **Migración**
+- Mover datos entre zonas de disponibilidad
+- Copiar datos a otras regiones
 
-#### 3. Migración entre Regiones
+✅ **Creación de AMIs**
+- Base para crear Amazon Machine Images
+
+✅ **Ahorro de Costos**
+- Almacenamiento incremental reduce costos
+- Solo pagas por los datos únicos
+
+### Características Avanzadas de Snapshots
+
+#### EBS Snapshot Archive (Archivo)
+
+Mueve snapshots antiguos a un nivel de almacenamiento de menor costo:
+
+| Aspecto | Standard | Archive |
+|---|---|---|
+| **Costo** | Standard | 75% más barato |
+| **Restauración** | Instantánea | 24-72 horas |
+| **Caso de uso** | Snapshots frecuentes | Snapshots antiguos raramente accedidos |
+
+#### Recycle Bin (Papelera de Reciclaje)
+
+Protege contra eliminación accidental de snapshots:
+
 ```
-┌────────────────┐         ┌────────────────┐
-│  us-east-1     │         │  eu-west-1     │
-│                │         │                │
-│  ┌──────────┐  │         │  ┌──────────┐  │
-│  │ Volumen  │  │         │  │  Nuevo   │  │
-│  │ EBS      │  │         │  │  Volumen │  │
-│  └────┬─────┘  │         │  └────▲─────┘  │
-│       │        │         │       │        │
-│  ┌────▼─────┐  │  Copy   │  ┌────┴─────┐  │
-│  │Snapshot  │──┼────────▶│  │Snapshot  │  │
-│  │ (S3)     │  │         │  │ (S3)     │  │
-│  └──────────┘  │         │  └──────────┘  │
-└────────────────┘         └────────────────┘
+┌──────────────────────────────────┐
+│ Snapshot eliminado accidentalmente │
+│              ↓                     │
+│ Movido a Recycle Bin automáticamente
+│              ↓                     │
+│ Retención: 1 día - 1 año          │
+│              ↓                     │
+│ Puede recuperarse durante ese tiempo
+└──────────────────────────────────┘
 ```
 
-### Tipos de Snapshots y Características Especiales
+Configuración de Recycle Bin:
+- Retención mínima: 1 día
+- Retención máxima: 1 año
+- Se aplica a nivel de región
+- Puede configurarse por etiquetas (tags)
 
-#### EBS Snapshot Archive
+#### Fast Snapshot Restore (FSR)
+
+Acelera la restauración de snapshots:
+
+| Sin FSR | Con FSR |
+|---|---|
+| Restauración gradual | Restauración instantánea |
+| Puede tardar horas para volúmenes grandes | Rendimiento completo desde el inicio |
+| Sin costo adicional | $0.75/hora por snapshot por AZ |
+
+### Copiar Snapshots Entre Regiones
+
+Puedes copiar snapshots a otras regiones para:
+
+- 🌍 Recuperación ante desastres
+- 🚀 Expansión global de tu aplicación
+- 📋 Cumplimiento normativo (datos en múltiples regiones)
+
 ```
-┌─────────────────────────────────────────────────────┐
-│  Ciclo de Vida del Snapshot                         │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Snapshot Estándar                                  │
-│  (Almacenamiento Normal)                            │
-│  Costo: $$                                          │
-│  Restauración: Minutos                              │
-│           │                                          │
-│           │ Archive (Archivar)                      │
-│           ▼                                          │
-│  Snapshot Archivado                                 │
-│  (Archive Tier - 75% más barato)                   │
-│  Costo: $                                           │
-│  Restauración: 24-72 horas                         │
-│           │                                          │
-│           │ Restore (Restaurar)                     │
-│           ▼                                          │
-│  Snapshot Estándar                                  │
-│  (Listo para crear volúmenes)                      │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-**Características del Archive**:
-- Hasta **75% más barato** que el almacenamiento estándar
-- Tiempo de restauración: **24 a 72 horas**
-- Ideal para snapshots de retención a largo plazo
-- Snapshots de cumplimiento normativo
-
-#### Recycle Bin para Snapshots EBS
-```
-┌─────────────────────────────────────────────────────┐
-│  Papelera de Reciclaje de EBS                       │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Usuario elimina       ┌──────────────────┐         │
-│  snapshot          ────▶│  Recycle Bin     │         │
-│  (accidental)           │                  │         │
-│                         │  Retención:      │         │
-│                         │  1 día - 1 año   │         │
-│                         │                  │         │
-│                         └────────┬─────────┘         │
-│                                  │                   │
-│                    ┌─────────────┼─────────────┐    │
-│                    │             │             │    │
-│              Recuperar      Período de    Eliminación│
-│              snapshot       retención     permanente │
-│              (Restore)      expira                   │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-Características de Recycle Bin:
-
-Protección contra eliminaciones accidentales
-Período de retención configurable: 1 día a 1 año
-Se aplica mediante reglas de retención
-Disponible para snapshots de EBS y AMIs
-Sin costo adicional (solo pagas por el almacenamiento)
-
-Mejores Prácticas con Snapshots
-1. Frecuencia de Snapshots
-Tipo de DatosFrecuencia RecomendadaDatos críticos de producciónCada 1-4 horasBases de datosCada 6-12 horasDatos de desarrolloDiariaDatos de archivoSemanal o mensual
-2. Estrategia de Retención
-┌─────────────────────────────────────────────────────┐
-│  Estrategia de Retención 3-2-1                      │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  3 copias de los datos                              │
-│  ├─ Original                                        │
-│  ├─ Snapshot diario                                 │
-│  └─ Snapshot semanal                                │RetryClaude does not have the ability to run the code it generates yet.LContinue│                                                      │
-│  2 tipos de almacenamiento                          │
-│  ├─ Snapshots estándar (acceso rápido)             │
-│  └─ Snapshots archivados (retención largo plazo)   │
-│                                                      │
-│  1 copia fuera de sitio                             │
-│  └─ Snapshot copiado a otra región                 │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-
-#### 3. Automatización de Snapshots
-
-Puedes automatizar la creación de snapshots usando:
-
-- **Amazon Data Lifecycle Manager (DLM)**
-- **AWS Backup**
-- **Scripts con AWS CLI**
-- **AWS Lambda con EventBridge**
-
-### Proceso de Creación de Snapshots
-```
-┌─────────────────────────────────────────────────────┐
-│  Flujo de Creación de Snapshot                      │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  1. Volumen EBS en uso                              │
-│     │                                                │
-│     ▼                                                │
-│  2. Iniciar snapshot                                │
-│     (puede continuar usándose)                      │
-│     │                                                │
-│     ▼                                                │
-│  3. Snapshot en progreso                            │
-│     (pending → completed)                           │
-│     │                                                │
-│     ▼                                                │
-│  4. Snapshot completado                             │
-│     (almacenado en S3)                              │
-│     │                                                │
-│     ├─── Crear volumen                              │
-│     ├─── Copiar a otra región                       │
-│     ├─── Archivar                                   │
-│     └─── Compartir con otras cuentas               │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+┌──────────────────┐         ┌──────────────────┐
+│  us-east-1       │ Copiar  │  eu-west-1       │
+│                  │────────→│                  │
+│  Snapshot        │         │  Snapshot        │
+│  snap-abc123     │         │  snap-def456     │
+└──────────────────┘         └──────────────────┘
 ```
 
-### Consideraciones de Rendimiento
+### ðŸ'¡ Mejores Prácticas
 
-| Aspecto | Detalle |
-|---------|---------|
-| **Durante el snapshot** | El volumen sigue siendo completamente utilizable |
-| **Primer snapshot** | Es una copia completa del volumen (puede tardar más) |
-| **Snapshots posteriores** | Solo copian los bloques modificados (más rápidos) |
-| **Restauración** | Los volúmenes creados desde snapshots se "hidratan" en segundo plano |
-| **Rendimiento inicial** | Los bloques se cargan bajo demanda (primera lectura puede ser más lenta) |
-
-### Cifrado de Snapshots
-```
-┌─────────────────────────────────────────────────────┐
-│  Reglas de Cifrado                                  │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Volumen NO cifrado                                 │
-│         │                                            │
-│         ├─ Snapshot NO cifrado                      │
-│         └─ Puede crear snapshot cifrado (copia)     │
-│                                                      │
-│  Volumen cifrado                                    │
-│         │                                            │
-│         └─ Snapshot SIEMPRE cifrado                 │
-│            (con la misma clave KMS)                 │
-│                                                      │
-│  Snapshot cifrado                                   │
-│         │                                            │
-│         └─ Volumen SIEMPRE cifrado                  │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### Compartir Snapshots
-
-Los snapshots pueden compartirse de varias formas:
-
-1. **Privado**: Solo tu cuenta (por defecto)
-2. **Específico**: Compartir con cuentas AWS específicas
-3. **Público**: Hacer el snapshot público (⚠️ no recomendado para datos sensibles)
-```
-⚠️ IMPORTANTE: No puedes compartir snapshots cifrados públicamente.
-   Para compartir snapshots cifrados, debes compartirlos con 
-   cuentas específicas y dar permisos a la clave KMS.
-```
-
-### Costos de Snapshots
-
-Los snapshots tienen un modelo de precios específico:
-```
-┌─────────────────────────────────────────────────────┐
-│  Modelo de Costos                                   │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Almacenamiento estándar:  ~$0.05 por GB/mes       │
-│  Archive tier:             ~$0.0125 por GB/mes      │
-│                            (75% descuento)          │
-│                                                      │
-│  Ejemplo: Volumen de 100 GB con cambios del 10%    │
-│                                                      │
-│  Snapshot 1:  100 GB  →  $5.00/mes                 │
-│  Snapshot 2:  +10 GB  →  $5.50/mes (total)         │
-│  Snapshot 3:  +10 GB  →  $6.00/mes (total)         │
-│                                                      │
-│  Si se archiva Snapshot 1:                          │
-│  Archive:     100 GB  →  $1.25/mes                 │
-│  Estándar:    20 GB   →  $1.00/mes                 │
-│  Total:                  $2.25/mes                  │
-│                          (62.5% ahorro)             │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### Tiempo de Restauración
-
-| Tipo de Snapshot | Tiempo de Restauración | Caso de Uso |
-|------------------|------------------------|-------------|
-| **Estándar** | Minutos | Recuperación rápida, volúmenes activos |
-| **Fast Snapshot Restore (FSR)** | Instantáneo (sin hidratación) | Aplicaciones críticas que requieren rendimiento completo inmediato |
-| **Archivado** | 24-72 horas | Cumplimiento normativo, retención a largo plazo |
-
-### Límites y Cuotas
-
-| Recurso | Límite Predeterminado |
-|---------|----------------------|
-| Snapshots concurrentes | 5 por volumen |
-| Snapshots por región | 100,000 |
-| Copias de snapshots concurrentes | 5 |
-
-> 💡 **Tip**: Estos límites pueden aumentarse contactando al soporte de AWS.
+1. ✅ **No necesitas desadjuntar el volumen** para crear un snapshot, pero es recomendado para garantizar consistencia
+2. ✅ **Programa snapshots regulares** para protección de datos críticos
+3. ✅ **Usa etiquetas** para organizar y gestionar snapshots
+4. ✅ **Elimina snapshots antiguos** que ya no necesites (ahorra costos)
+5. ✅ **Copia snapshots críticos** a otra región para disaster recovery
+6. ✅ **Habilita Recycle Bin** para protección contra eliminación accidental
 
 ---
 
-## 5. EBS Snapshots - Práctica
+## 5. EFS (Elastic File System)
 
-Aprende a crear, gestionar y restaurar snapshots de EBS a través de la consola de AWS.
+**Amazon EFS** es un sistema de archivos NFS (Network File System) totalmente administrado, escalable y elástico para usar con servicios de AWS Cloud. A diferencia de EBS, EFS puede montarse en **múltiples instancias EC2 simultáneamente**.
 
-### Objetivos de la Práctica
+### ¿Qué es EFS?
 
-- Crear un snapshot manual de un volumen EBS
-- Copiar un snapshot a otra región
-- Restaurar un volumen desde un snapshot
-- Configurar el Archive tier
-- Usar Recycle Bin para recuperación
-
-### Parte 1: Crear un Snapshot
-
-#### Paso 1: Crear un Snapshot Manual
 ```
-1. Navega a: EC2 > Elastic Block Store > Volumes
-
-2. Selecciona el volumen del que quieres hacer snapshot
-
-3. Click en "Actions" > "Create Snapshot"
-
-   ┌────────────────────────────────────────────┐
-   │ Create Snapshot                            │
-   ├────────────────────────────────────────────┤
-   │ Description:                               │
-   │ [Snapshot de mi volumen de datos]         │
-   │                                            │
-   │ Tags (opcional):                           │
-   │ Key: Name                                  │
-   │ Value: [backup-datos-2024-01]             │
-   │                                            │
-   │ Key: Environment                           │
-   │ Value: [Production]                        │
-   │                                            │
-   │ ⓘ Estimación de tamaño y costo:           │
-   │   Tamaño: ~50 GB                           │
-   │   Costo aproximado: $2.50/mes              │
-   └────────────────────────────────────────────┘
-
-4. Click en "Create Snapshot"
-
-5. El estado inicial será "pending"
-   pending → completed (puede tardar minutos u horas)
-```
-
-#### Paso 2: Monitorear el Progreso
-```
-1. Navega a: EC2 > Elastic Block Store > Snapshots
-
-2. Busca tu snapshot en la lista
-   
-   ┌─────────────────────────────────────────────────────┐
-   │ Snapshot ID         │ Status    │ Progress          │
-   ├─────────────────────┼───────────┼───────────────────┤
-   │ snap-0abc123def     │ pending   │ 45%               │
-   │ snap-0xyz789ghi     │ completed │ 100%              │
-   └─────────────────────────────────────────────────────┘
-
-3. Refresca la página periódicamente hasta ver "completed"
-```
-
-### Parte 2: Restaurar un Volumen desde Snapshot
-
-#### Paso 1: Crear Volumen desde Snapshot
-```
-1. En la lista de Snapshots, selecciona tu snapshot
-
-2. Click en "Actions" > "Create Volume from Snapshot"
-
-3. Configurar el nuevo volumen:
-   
-   ┌────────────────────────────────────────────┐
-   │ Create Volume from Snapshot                │
-   ├────────────────────────────────────────────┤
-   │ Snapshot ID:     snap-0abc123def           │
-   │                  (automático)              │
-   │                                            │
-   │ Volume Type:     [gp3 ▼]                  │
-   │                  (puede cambiar)           │
-   │                                            │
-   │ Size (GiB):      [50]                      │
-   │                  (puede aumentar, no       │
-   │                   disminuir)               │
-   │                                            │
-   │ IOPS:            [3000]                    │
-   │ Throughput:      [125] MB/s                │
-   │                                            │
-   │ Availability     [us-east-1a ▼]           │
-   │ Zone:            ⚠️ IMPORTANTE: Elegir AZ │
-   │                                            │
-   │ Encryption:      [☑] Encrypt this volume  │
-   │                  (si el snapshot estaba    │
-   │                   cifrado)                 │
-   │                                            │
-   │ Tags:            Key: Name                 │
-   │                  Value: restored-volume    │
-   └────────────────────────────────────────────┘
-
-4. Click en "Create Volume"
-
-5. Una vez creado, puedes adjuntarlo a una instancia EC2
-```
-
-#### Paso 2: Adjuntar el Volumen Restaurado
-```
-1. Navega a: EC2 > Volumes
-
-2. Selecciona el nuevo volumen creado
-
-3. Actions > Attach Volume
-
-4. Selecciona la instancia de destino
-
-5. El volumen estará disponible para montar
-```
-
-### Parte 3: Copiar Snapshot a Otra Región
-
-#### Paso 1: Copiar entre Regiones
-```
-1. En la lista de Snapshots, selecciona el snapshot
-
-2. Actions > "Copy Snapshot"
-
-3. Configurar la copia:
-   
-   ┌────────────────────────────────────────────┐
-   │ Copy Snapshot                              │
-   ├────────────────────────────────────────────┤
-   │ Destination Region:                        │
-   │ [eu-west-1 (Ireland) ▼]                   │
-   │                                            │
-   │ Description:                               │
-   │ [Copia DR del snapshot de producción]     │
-   │                                            │
-   │ Encryption:                                │
-   │ ○ Encrypt this snapshot                    │
-   │   KMS Key: [Default ▼]                    │
-   │                                            │
-   │ ⓘ La transferencia de datos entre          │
-   │   regiones tiene costo adicional           │
-   │   (~$0.02 por GB)                          │
-   └────────────────────────────────────────────┘
-
-4. Click en "Copy Snapshot"
-
-5. Cambia a la región de destino para ver el progreso
-   (esquina superior derecha)
-```
-
-### Parte 4: Archivar Snapshots
-
-#### Paso 1: Mover Snapshot a Archive Tier
-```
-1. Selecciona un snapshot que no necesites acceso rápido
-
-2. Actions > "Archive Snapshot"
-
-3. Confirmar:
-   
-   ┌────────────────────────────────────────────┐
-   │ Archive Snapshot                           │
-   ├────────────────────────────────────────────┤
-   │ Snapshot ID:  snap-0abc123def              │
-   │                                            │
-   │ Current Cost: $5.00/mes                    │
-   │ Archive Cost: $1.25/mes (75% ahorro)       │
-   │                                            │
-   │ ⚠️ Tiempo de restauración: 24-72 horas    │
-   │                                            │
-   │ ☑ Entiendo que el snapshot no estará      │
-   │   disponible para restauración inmediata   │
-   └────────────────────────────────────────────┘
-
-4. Click en "Archive"
-
-5. El estado cambiará a "archiving" → "archived"
-```
-
-#### Paso 2: Restaurar desde Archive
-```
-1. Selecciona un snapshot archivado
-
-2. Actions > "Restore from Archive"
-
-3. Configurar restauración:
-   
-   ┌────────────────────────────────────────────┐
-   │ Restore Snapshot from Archive              │
-   ├────────────────────────────────────────────┤
-   │ Snapshot ID:  snap-0abc123def              │
-   │                                            │
-   │ Restore Type:                              │
-   │ ○ Temporary restore (tempor restoration)  │
-   │   Duration: [1-14 days]                    │
-   │                                            │
-   │ ○ Permanent restore                        │
-   │   (vuelve a tier estándar)                 │
-   │                                            │
-   │ Estimated time: 24-72 hours                │
-   │ Cost: $0.03 per GB restaurado              │
-   └────────────────────────────────────────────┘
-
-4. Click en "Restore"
-
-5. Espera 24-72 horas para que complete
-```
-
-### Parte 5: Configurar Recycle Bin
-
-#### Paso 1: Crear Regla de Retención
-```
-1. Navega a: EC2 > Elastic Block Store > Recycle Bin
-
-2. Click en "Create retention rule"
-
-3. Configurar la regla:
-   
-   ┌────────────────────────────────────────────┐
-   │ Create Retention Rule                      │
-   ├────────────────────────────────────────────┤
-   │ Retention rule name:                       │
-   │ [snapshot-protection-rule]                 │
-   │                                            │
-   │ Description:                               │
-   │ [Protección contra eliminación accidental] │
-   │                                            │
-   │ Resource type:                             │
-   │ ○ EBS snapshots                            │
-   │ ○ EBS-backed AMIs                          │
-   │                                            │
-   │ Retention period:                          │
-   │ [30] days                                  │
-   │                                            │
-   │ Resource tags (opcional):                  │
-   │ Tag key: [Environment]                     │
-   │ Tag value: [Production]                    │
-   │                                            │
-   │ ⓘ Solo snapshots con este tag serán        │
-   │   protegidos por esta regla                │
-   └────────────────────────────────────────────┘
-
-4. Click en "Create Retention Rule"
-```
-
-#### Paso 2: Recuperar un Snapshot Eliminado
-```
-1. Navega a: EC2 > Recycle Bin
-
-2. Busca el snapshot eliminado:
-   
-   ┌─────────────────────────────────────────────────┐
-   │ Resources in Recycle Bin                        │
-   ├──────────────┬──────────┬─────────────────────┤
-   │ Resource ID  │ Type     │ Deletion date       │
-   ├──────────────┼──────────┼─────────────────────┤
-   │ snap-0abc... │ Snapshot │ 2024-01-15 10:30   │
-   │ snap-0xyz... │ Snapshot │ 2024-01-14 15:45   │
-   └──────────────┴──────────┴─────────────────────┘
-
-3. Selecciona el snapshot
-
-4. Actions > "Recover"
-
-5. Confirmar la recuperación:
-   
-   ┌────────────────────────────────────────────┐
-   │ Recover Resource                           │
-   ├────────────────────────────────────────────┤
-   │ Resource ID:  snap-0abc123def              │
-   │                                            │
-   │ El snapshot será restaurado a su estado   │
-   │ original y estará disponible              │
-   │ inmediatamente.                            │
-   │                                            │
-   │ ⓘ Retention period remaining: 25 days     │
-   └────────────────────────────────────────────┘
-
-6. Click en "Recover"
-
-7. El snapshot reaparecerá en la lista de snapshots
-```
-
-### Parte 6: Automatización con Data Lifecycle Manager
-
-#### Crear Política de Lifecycle
-```
-1. Navega a: EC2 > Elastic Block Store > Lifecycle Manager
-
-2. Click en "Create lifecycle policy"
-
-3. Configurar política:
-   
-   ┌────────────────────────────────────────────┐
-   │ Create Lifecycle Policy                    │
-   ├────────────────────────────────────────────┤
-   │ Policy type:                               │
-   │ ○ EBS snapshot policy                      │
-   │                                            │
-   │ Target resources:                          │
-   │ ○ Volume                                   │
-   │   Target with tags:                        │
-   │   Tag: [Backup]                            │
-   │   Value: [Daily]                           │
-   │                                            │
-   │ Schedule:                                  │
-   │ Schedule name: [daily-backup]              │
-   │ Frequency: [Daily]                         │
-   │ Starting at: [02:00 UTC]                   │
-   │                                            │
-   │ Retention:                                 │
-   │ Count: [7] (mantener últimos 7)           │
-   │                                            │
-   │ Cross-region copy (opcional):              │
-   │ ☑ Enable                                   │
-   │   Target region: [eu-west-1]              │
-   │   Retention: [30] days                     │
-   │                                            │
-   │ Tags to add to snapshots:                  │
-   │ Key: [AutomatedBackup]                     │
-   │ Value: [True]                              │
-   └────────────────────────────────────────────┘
-
-4. Click en "Create Policy"
-```
-
-### Parte 7: Monitoreo y Verificación
-
-#### Verificar Snapshots Creados
-```bash
-# Usando AWS CLI (opcional)
-
-# Listar todos tus snapshots
-aws ec2 describe-snapshots --owner-ids self
-
-# Listar snapshots con un tag específico
-aws ec2 describe-snapshots \
-  --owner-ids self \
-  --filters "Name=tag:Name,Values=backup-*"
-
-# Ver el estado de un snapshot específico
-aws ec2 describe-snapshots \
-  --snapshot-ids snap-0abc123def
-
-# Crear un snapshot desde CLI
-aws ec2 create-snapshot \
-  --volume-id vol-0abc123def \
-  --description "Backup manual desde CLI" \
-  --tag-specifications 'ResourceType=snapshot,Tags=[{Key=Name,Value=cli-backup}]'
-```
-
-### Mejores Prácticas Implementadas
-
-| Práctica | Implementación |
-|----------|----------------|
-| **Etiquetado consistente** | Usa tags descriptivos (Name, Environment, BackupType) |
-| **Automatización** | Configura DLM para backups automáticos |
-| **Retención adecuada** | 7 días para diarios, 30 días para semanales |
-| **Copia entre regiones** | Para recuperación ante desastres |
-| **Archive tier** | Para snapshots de retención a largo plazo |
-| **Recycle Bin** | Configurado con 30 días de retención |
-| **Monitoreo** | Usa CloudWatch para alertas de fallos |
-
-### Tabla de Costos Estimados (Ejemplo)
-```
-┌─────────────────────────────────────────────────────┐
-│  Ejemplo: Volumen de 100 GB con cambio diario 5%   │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Día 1:  Snapshot completo (100 GB)  → $5.00/mes   │
-│  Día 2:  +5 GB incremental           → $5.25/mes   │
-│  Día 3:  +5 GB incremental           → $5.50/mes   │
-│  ...                                                 │
-│  Día 7:  +5 GB incremental           → $6.50/mes   │
-│                                                      │
-│  Con política de retención de 7 días:               │
-│  Costo estable: ~$6.50/mes                          │
-│                                                      │
-│  Archivando snapshots > 30 días:                    │
-│  Estándar (7 días):  $6.50/mes                      │
-│  Archivado (30+ días): $3.00/mes                    │
-│  Total: $9.50/mes                                   │
-│  vs. Todo estándar: $22.50/mes                      │
-│  Ahorro: 58%                                         │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
-
-### Troubleshooting Común
-
-| Problema | Solución |
-|----------|----------|
-| **Snapshot se queda en "pending"** | Espera más tiempo; snapshots grandes pueden tardar horas |
-| **No puedo crear volumen en otra AZ** | Los snapshots son regionales; copia el snapshot si necesitas cambiar de región |
-| **Error al restaurar snapshot archivado** | Primero debes restaurar del archive tier (24-72 horas) |
-| **Snapshot eliminado no aparece en Recycle Bin** | Verifica que existe una regla de retención activa |
-| **Costo inesperado de snapshots** | Revisa snapshots antiguos y archívalos o elimínalos |
-
-### Limpieza de Recursos
-
-Para evitar costos innecesarios:
-```
-1. Listar todos tus snapshots
-
-2. Identificar snapshots innecesarios:
-   - Snapshots de prueba
-   - Snapshots muy antiguos sin tag de retención
-   - Snapshots duplicados
-
-3. Archivar snapshots de retención a largo plazo
-
-4. Eliminar snapshots que ya no necesitas:
-   Seleccionar snapshot > Actions > Delete Snapshot
-   
-   ⚠️ Asegúrate de que no lo necesitas; una vez eliminado
-      (y pasado el período de Recycle Bin), no se puede recuperar
-
-5. Verificar políticas de DLM están funcionando correctamente
-```
-
----
-
-## 6. Visión General de AMI (Amazon Machine Image)
-
-Una **AMI (Amazon Machine Image)** es una plantilla preconfigurada que contiene el software, sistema operativo, configuraciones y datos necesarios para lanzar una instancia EC2.
-
-### ¿Qué es una AMI?
-```
-┌─────────────────────────────────────────────────────┐
-│  Componentes de una AMI                             │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  ┌────────────────────────────────────────┐         │
-│  │  Sistema Operativo                     │         │
-│  │  (Amazon Linux, Ubuntu, Windows, etc.) │         │
-│  └────────────────────────────────────────┘         │
-│                    │                                 │
-│  ┌────────────────▼────────────────────┐            │
-│  │  Software Preinstalado               │            │
-│  │  (Apache, MySQL, Node.js, etc.)     │            │
-│  └────────────────────────────────────┘            │
-│                    │                                 │
-│  ┌────────────────▼────────────────────┐            │
-│  │  Configuraciones                     │            │
-│  │  (Variables de entorno, configs)    │            │
-│  └────────────────────────────────────┘            │
-│                    │                                 │
-│  ┌────────────────▼────────────────────┐            │
-│  │  Datos (Opcional)                    │            │
-│  │  (Archivos de aplicación)           │            │
-│  └────────────────────────────────────┘            │
-│                    │                                 │
-│                    ▼                                 │
-│          Plantilla lista para usar                   │
-│          Lanzar instancias idénticas                │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+EBS (Almacenamiento de Bloques):
+┌────────────────────────┐
+│ Volumen EBS (10 GB)    │
+│        │                │
+│        ↓                │
+│   EC2 Instance          │
+│   (1 a 1)              │
+└────────────────────────┘
+
+EFS (Sistema de Archivos Compartido):
+┌────────────────────────────────┐
+│      EFS File System           │
+│            │                    │
+│     ┌──────┴────┬────┬────┐   │
+│     ↓          ↓    ↓    ↓    │
+│   EC2-1    EC2-2 EC2-3 EC2-4  │
+│   (Many to Many)               │
+└────────────────────────────────┘
 ```
 
 ### Características Principales
 
 | Característica | Descripción |
-|----------------|-------------|
-| **Regional** | Una AMI está asociada a una región específica de AWS |
-| **Reutilizable** | Puedes lanzar múltiples instancias desde una misma AMI |
-| **Personalizable** | Crea tus propias AMIs con tu configuración exacta |
-| **Compartible** | Comparte AMIs entre cuentas de AWS |
-| **Versionable** | Mantén diferentes versiones de tus configuraciones |
+|---|---|
+| **Sistema de archivos compartido** | Múltiples instancias EC2 pueden acceder simultáneamente |
+| **Totalmente administrado** | AWS gestiona hardware, parches, backups |
+| **Altamente disponible** | Datos replicados en múltiples AZs |
+| **Escalable** | Crece y se reduce automáticamente (hasta petabytes) |
+| **Rendimiento** | Puede escalar a miles de conexiones concurrentes |
+| **Compatible con NFS** | Protocolo estándar NFSv4.1 |
+| **Solo para Linux** | Compatible con instancias EC2 Linux, no Windows |
+| **Pago por uso** | Solo pagas por el almacenamiento que uses |
 
-### Tipos de AMIs
+### Clases de Almacenamiento en EFS
 
-#### 1. AMIs Públicas (Public AMIs)
-```
-┌─────────────────────────────────────────────────────┐
-│  AMIs Públicas                                      │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Proporcionadas por AWS:                            │
-│  • Amazon Linux 2023                                │
-│  • Amazon Linux 2                                   │
-│  • Ubuntu Server                                    │
-│  • Red Hat Enterprise Linux                        │
-│  • Windows Server                                   │
-│  • macOS (para instancias Mac)                     │
-│                                                      │
-│  Proporcionadas por la Comunidad:                   │
-│  • AMIs verificadas por AWS                         │
-│  • AMIs de la comunidad (usar con precaución)      │
-│                                                      │
-│  ✅ Ventajas:                                       │
-│  • Gratis (solo pagas por la instancia)            │
-│  • Mantenidas y actualizadas                        │
-│  • Ampliamente probadas                             │
-│                                                      │
-│  ⚠️ Consideraciones:                                │
-│  • Configuración genérica                           │
-│  • Requiere personalización posterior              │
-│                                                      │
-└─────────────────────────────────────────────────────┘
-```
+EFS ofrece dos clases de almacenamiento:
 
-#### 2. AMIs Privadas (My AMIs)
+| Clase | Descripción | Costo | Uso |
+|---|---|---|---|
+| **EFS Standard** | Acceso frecuente | ~$0.30/GB/mes | Archivos accedidos regularmente |
+| **EFS Infrequent Access (IA)** | Acceso poco frecuente | ~$0.025/GB/mes | Archivos accedidos raramente |
+
+**Ahorro con EFS-IA:** Hasta 92% comparado con Standard
+
+### Modos de Rendimiento
+
+EFS ofrece dos modos de rendimiento:
+
+| Modo | Descripción | Latencia | Throughput | Uso |
+|---|---|---|---|---|
+| **General Purpose** | Balanceado | Baja | Hasta 7,000 ops/seg por FS | Mayoría de casos de uso |
+| **Max I/O** | Alto throughput | Mayor | +500,000 ops/seg | Big data, procesamiento masivo |
+
+### Casos de Uso de EFS
+
+#### Aplicaciones Web Escalables
+
 ```
-┌─────────────────────────────────────────────────────┐
-│  AMIs Privadas (Propias)                            │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Creadas por ti:                                    │
-│  • Basadas en tus configuraciones específicas      │
-│  • Incluyen tu software y datos                     │
-│  • Totalmente personalizadas                        │
-│                                                      │
-│  ✅ Ventajas:                                       │
-│  • Control total sobre la configuración            │
-│  • Despliegue rápido de entornos idénticos        │
-│  • Consistencia entre instancias                    │
-│  • Reducción del tiempo de configuración          │
-│                                                      │
-│  Casos de uso:                                      │
-│  • Servidores web preconfigurados                  │
-│  • Entornos de desarrollo estandarizados          │
-│  • Aplicaciones empaquetadas                        │
-│  • Disaster Recovery                                │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Web-1    │  │ Web-2    │  │ Web-3    │
+└─────┬────┘  └─────┬────┘  └─────┬────┘
+      │             │             │
+      └─────────────┴─────────────┘
+                    │
+              ┌─────┴─────┐
+              │    EFS    │
+              │ /var/www  │
+              └───────────┘
+
+Beneficio: Contenido consistente en todos los servidores
 ```
 
-#### 3. AWS Marketplace AMIs
+#### Directorios Home Compartidos
+
+Múltiples usuarios acceden a sus directorios home desde diferentes servidores
+
+#### Content Management Systems (CMS)
+
+WordPress, Drupal, Joomla en múltiples instancias
+
+#### Desarrollo y Testing
+
+Equipos de desarrollo comparten código y recursos
+
+#### Machine Learning
+
+Múltiples instancias de entrenamiento acceden a datasets compartidos
+
+#### Big Data y Analytics
+
+Cluster de procesamiento con datos compartidos
+
+### ðŸ'¡ Mejores Prácticas para EFS
+
+1. ✅ **Usa General Purpose mode** para la mayoría de casos
+2. ✅ **Habilita Lifecycle Management** para ahorrar costos
+3. ✅ **Usa Elastic Throughput** para workloads impredecibles
+4. ✅ **Monta desde la misma AZ** para menor latencia
+5. ✅ **Cifra datos sensibles** (en reposo y tránsito)
+6. ✅ **Usa Access Points** para aislar aplicaciones
+7. ✅ **Implementa Security Groups restrictivos** (solo puerto 2049)
+8. ✅ **Monitorea métricas** en CloudWatch
+
+---
+
+## 6. Comparativa: EBS vs EFS vs Instance Store vs S3
+
+| Característica | EBS | EFS | Instance Store | S3 |
+|---|---|---|---|---|
+| **Tipo** | Bloques | Archivos NFS | Bloques | Objeto |
+| **Protocolo** | N/A | NFS | N/A | HTTP(S) |
+| **Acceso** | Instancia única | Múltiples instancias | Múltiples instancias | Global |
+| **Persistencia** | ✅ Sí | ✅ Sí | ❌ No | ✅ Sí |
+| **Disponibilidad** | 1 AZ | Multi-AZ | 1 AZ | Global |
+| **Escalamiento** | Manual | Automático | Fijo | Ilimitado |
+| **Precio** | $0.08/GB/mes | $0.30/GB/mes | Incluido | $0.023/GB/mes |
+| **Latencia** | ~ms | ~ms | ~μs | ~100ms |
+| **Casos de uso** | BD, boot | Compartido | Cache temp | Backups |
+
+---
+
+## 7. Modelo de Responsabilidad Compartida para el Almacenamiento EC2
+
+El **Modelo de Responsabilidad Compartida** de AWS define claramente qué aspectos de seguridad y operación gestiona AWS y cuáles son responsabilidad del cliente.
+
+### Concepto General
+
 ```
-┌─────────────────────────────────────────────────────┐
-│  AWS Marketplace AMIs                               │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  Vendidas por terceros:                             │
-│  • Software comercial preinstalado                  │
-│  • Soluciones empresariales                         │
-│  • Aplicaciones optimizadas                         │
-│                                                      │
-│  Ejemplos:                                          │
-│  • WordPress preconfigurado                         │
-│  • Servidores de bases de datos                    │
-│  • Firewalls y seguridad                            │
-│  • Herramientas de desarrollo                       │
-│  • Software de backup                               │
-│                                                      │
-│  💰 Modelo de pricing:                              │
-│  • Costo de la instancia EC2                        │
-│  • + Costo adicional del software                   │
-│  • Facturado por hora o por año                     │
-│                                                      │
-│  ✅ Ventajas:                                       │
-│  • Solución completa lista para usar               │
-│  • Soporte del vendedor                             │
-│  • Actualizaciones incluidas                        │
-│                                                      │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ MODELO DE RESPONSABILIDAD COMPARTIDA      │
+├──────────────────────────────────────────┤
+│                                          │
+│  AWS               CLIENTE               │
+│  ████              ████████             │
+│  Seguridad         Seguridad             │
+│  DEL Cloud         EN el Cloud           │
+│                                          │
+└──────────────────────────────────────────┘
 ```
 
-### Componentes de una AMI
+### Responsabilidades de AWS (DEL Cloud)
 
-Una AMI contiene los siguientes elementos:
-┌─────────────────────────────────────────────────────┐
-│  Estructura de una AMI                              │
-├─────────────────────────────────────────────────────┤
-│                                                      │
-│  1. Plantilla del Volumen Raíz                      │
-│     └─ Snapshot del volumen raíz (/)                │
-│        • Sistema operativo                          │
-│        • Software instalado                         │
-│        • Configuraciones del sistema                │
-│                                                      │
-│  2. Permisos de Lanzamiento (Launch Permissions)    │
-│     └─ Quién puede usar la AMI                      │
-│        • Privada (solo tu cuenta)                   │
-│        • Específica (cuentas seleccionadas)        │
-│        • Pública (cualquiera)                       │
-│                                                      │
-│  3. Mapeo de Dispositivos de Bloque                 │
-│     └─ Configuración de volúmenes al lanzar        │
-│        • Volumen raíz (/dev/xvda)                   │
-│        • Volúmenes adicionales (opcional)           │
-│        • Instance store volumes (si aplica)         │
-│                                                      │
+AWS es responsable de la **infraestructura** que ejecuta todos los servicios de AWS.
+
+### Responsabilidades del Cliente (EN el Cloud)
+
+El cliente es responsable de la **seguridad y configuración** de lo que construye en AWS.
+
+### Matriz de Responsabilidades por CategorÍa
+
+#### Seguridad
+
+| Aspecto | AWS | Cliente |
+|---|---|---|
+| Seguridad física | ✅ | ❌ |
+| Seguridad de red (infraestructura) | ✅ | ❌ |
+| Seguridad de red (configuración) | ❌ | ✅ |
+| Cifrado en reposo (capacidad) | ✅ | ❌ |
+| Cifrado en reposo (activación) | ❌ | ✅ |
+| Cifrado en tránsito (capacidad) | ✅ | ❌ |
+| Cifrado en tránsito (configuración) | ❌ | ✅ |
+| Gestión de claves | ✅ (infra) | ✅ (uso) |
+
+### Checklist de Responsabilidades del Cliente
+
+**Configuración Inicial:**
+- ☑ Cifrar volúmenes EBS con KMS
+- ☑ Configurar Security Groups apropiados
+- ☑ Establecer políticas IAM de acceso
+- ☑ Etiquetar todos los recursos
+
+**Operaciones Continuas:**
+- ☑ Crear snapshots regularmente (EBS)
+- ☑ Copiar snapshots a otra región (DR)
+- ☑ Configurar Lifecycle policies (EFS)
+- ☑ Eliminar recursos no usados
+
+**Monitoreo y Alertas:**
+- ☑ Configurar alarmas CloudWatch
+- ☑ Revisar métricas de uso/rendimiento
+- ☑ Auditar accesos con CloudTrail
+- ☑ Verificar cumplimiento con Config
+
+**Disaster Recovery:**
+- ☑ Documentar procedimientos de restauración
+- ☑ Probar restauraciones periódicamente
+- ☑ Mantener AMIs actualizadas
+- ☑ Plan de failover a otra región
+
+**Seguridad:**
+- ☑ Rotar claves de cifrado
+- ☑ Revisar permisos IAM regularmente
+- ☑ Actualizar Security Groups según sea necesario
+- ☑ Eliminar snapshots/AMIs públicos no intencionales
+
+---
+
+## Resumen - Almacenamiento de Instancias EC2
+
+### EBS (Elastic Block Store)
+
+- **Descripción:** Almacenamiento persistente a nivel de bloque
+- **Persistencia:** Datos se conservan después de detener/terminar la instancia
+- **Disponibilidad:** Replicado automáticamente dentro de la AZ
+- **Escalabilidad:** Puede aumentarse dinámicamente
+- **Casos de uso:** Bases de datos, aplicaciones críticas, sistemas de archivos
+- **Tipos:** gp3/gp2, io1/io2, st1/sc1
+
+### EBS Snapshots
+
+- **Descripción:** Copias de seguridad incrementales de volúmenes EBS
+- **Almacenamiento:** Se guardan en S3
+- **Casos de uso:** Backup, migración, DR
+- **Características:** Papelera de reciclaje, archivo a bajo costo
+
+### Instance Store
+
+- **Descripción:** Almacenamiento temporal incluido con la instancia
+- **Persistencia:** Datos se pierden al detener/terminar
+- **Rendimiento:** Muy rápido (acceso directo)
+- **Casos de uso:** Cachés, datos de sesión, archivos temporales
+
+### EFS (Elastic File System)
+
+- **Descripción:** Sistema de archivos NFS compartido
+- **Acceso:** Multi-AZ automático
+- **Escalabilidad:** Crecimiento automático
+- **Clases:** Standard e Infrequent Access (IA)
+- **Casos de uso:** Almacenamiento compartido, colaborativo
+
+---
+
+## Herramientas Recomendadas
+
+- [Documentación oficial de EBS](https://docs.aws.amazon.com/ebs/)
+- [Documentación oficial de EFS](https://docs.aws.amazon.com/efs/)
+- [AWS Pricing Calculator](https://calculator.aws/)
+- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
 
 ---
 ***
 ## Notas Finales
 
-Este material cubre exhaustivamente todo lo relacionado con Storage para intancias EC2 para el examen AWS Certified Cloud Practitioner. Practica los conceptos en tu propia cuenta de AWS (usa la capa gratuita) para reforzar el aprendizaje.
+Este material cubre la Introducción a Intancias EC2 para el examen AWS Certified Cloud Practitioner. Practica los conceptos en tu propia cuenta de AWS (usa la capa gratuita) para reforzar el aprendizaje.
 
 ¡Buena suerte en tu examen!
 
